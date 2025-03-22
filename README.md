@@ -1,5 +1,5 @@
 # tiny_google_oidc
-A minimal implementation of Google's OpenID Connect library  
+Tiny library for Google's OpenID Connect.  
 Implementation in server flow  
 [google document](https://developers.google.com/identity/openid-connect/openid-connect)
 ## Feature

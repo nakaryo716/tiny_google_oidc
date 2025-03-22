@@ -1,6 +1,14 @@
 [package]
 name = "tiny_google_oidc"
 version = "0.1.0"
+readme = "README.md"
+repository = "https://github.com/nakaryo716/tiny_google_oidc.git" 
+license = "MIT" 
+description = """
+Tiny library for Google's OpenID Connect
+"""
+documentation = "https://docs.rs/tiny_google_oidc" 
+keywords = ["oidc", "Authentication", "Web programming"]
 edition = "2024"
 
 [dependencies]
