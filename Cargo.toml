@@ -8,7 +8,7 @@ description = """
 Tiny library for Google's OpenID Connect
 """
 documentation = "https://docs.rs/tiny_google_oidc" 
-keywords = ["oidc", "Authentication", "Web programming"]
+keywords = ["oidc", "Authentication", "web-programming"]
 edition = "2024"
 
 [dependencies]
