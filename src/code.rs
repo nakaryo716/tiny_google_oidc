@@ -313,8 +313,8 @@ impl UnCheckedCodeResponse {
     }
 
     /// Must be validated using a CSRF token before use.
-    pub fn exchange_with_code(self, csrf_token: CSRFToken) -> Result<Code, Error> {
-        if self.state.0 == csrf_token.0 {
+    pub fn exchange_with_code(self, csrf_token_val: &str) -> Result<Code, Error> {
+        if self.state.0 == csrf_token_val {
             Ok(self.code)
         } else {
             Err(Error::CSRFNotMatch)
