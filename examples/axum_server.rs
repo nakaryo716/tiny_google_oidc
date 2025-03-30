@@ -158,7 +158,7 @@ async fn call_back(
     }
     // Get Code after verify CSRF token
     let code = code_res
-        .exchange_with_code(csrf_token.clone())
+        .exchange_with_code(csrf_token.value())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Construct IDTokenRequest by using Code
