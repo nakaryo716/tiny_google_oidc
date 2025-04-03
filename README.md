@@ -1,4 +1,7 @@
 # tiny_google_oidc
+[![crates.io](https://img.shields.io/crates/v/tiny_google_oidc.svg)](https://crates.io/crates/tiny_google_oidc)
+[![docs.rs](https://img.shields.io/docsrs/tiny_google_oidc/latest)](https://docs.rs/tiny_google_oidc)
+
 Tiny library for Google's OpenID Connect.  
 Implementation in server flow  
 [google document](https://developers.google.com/identity/openid-connect/openid-connect)
