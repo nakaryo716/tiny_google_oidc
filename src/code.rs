@@ -148,9 +148,9 @@ impl Code {
     /// If valid, returns a `Code`; otherwise, returns `Error::CSRFNotMatch`.
     pub fn new_with_verify_csrf(
         res: UnCheckedCodeResponse,
-        csrf_token: CSRFToken,
+        csrf_token_val: &str,
     ) -> Result<Self, Error> {
-        if res.state.0 == csrf_token.0 {
+        if res.state.0 == csrf_token_val {
             Ok(res.code)
         } else {
             Err(Error::CSRFNotMatch)
