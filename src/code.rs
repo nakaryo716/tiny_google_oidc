@@ -1,7 +1,7 @@
 //! This module handles the process of requesting and verifying an authorization code
 //! in the OpenID Connect authentication flow.   
+//! 
 //! It provides the following key functionalities:
-//!
 //! - Generating an authorization request URL (`CodeRequest`).
 //! - Parsing and verifying the authorization code received from Google's callback (`UnCheckedCodeResponse`).
 //!
