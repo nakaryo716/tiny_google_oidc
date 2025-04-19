@@ -1,6 +1,6 @@
 //! This module handles the process of requesting and verifying an authorization code
 //! in the OpenID Connect authentication flow.   
-//! 
+//!
 //! It provides the following key functionalities:
 //! - Generating an authorization request URL (`CodeRequest`).
 //! - Parsing and verifying the authorization code received from Google's callback (`UnCheckedCodeResponse`).
@@ -39,7 +39,7 @@
 //! ## Handling the Callback and Verifying the Authorization Code
 //! ```rust,no_run
 //! let response = UnCheckedCodeResponse::from_url("https://example.com/callback?...").unwrap();
-//! // get stored CSRF token From DB(Redis, in memory ...) 
+//! // get stored CSRF token From DB(Redis, in memory ...)
 //! let csrf_token = store.get("csrf_token_key")?;
 //!
 //! let code = response.exchange_with_code(csrf_token).expect("CSRF token mismatch!");
@@ -182,7 +182,7 @@ impl From<String> for Code {
 #[derive(Debug, Clone)]
 pub struct CodeRequest<S>
 where
-    S: Iterator<Item = AdditionalScope>,
+    S: IntoIterator<Item = AdditionalScope>,
 {
     auth_endpoint: AuthEndPoint,
     client_id: ClientID,
@@ -196,7 +196,7 @@ where
 
 impl<S> CodeRequest<S>
 where
-    S: Iterator<Item = AdditionalScope> + Clone,
+    S: IntoIterator<Item = AdditionalScope> + Clone,
 {
     /// # **Parameters**
     ///
@@ -247,7 +247,7 @@ where
             .scope
             .as_ref()
             .map(|s| {
-                s.clone().map(|v| match v {
+                s.clone().into_iter().map(|v| match v {
                     AdditionalScope::Email => "email",
                     AdditionalScope::Profile => "profile",
                 })
@@ -413,7 +413,7 @@ mod tests {
             .redirect_uri(redirect_url)
             .build();
 
-        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
@@ -452,7 +452,7 @@ mod tests {
             .redirect_uri(redirect_url)
             .build();
 
-        let scope = Some([AdditionalScope::Email].into_iter());
+        let scope = Some([AdditionalScope::Email]);
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
@@ -529,7 +529,6 @@ mod tests {
                 AdditionalScope::Profile,
                 AdditionalScope::Email,
             ]
-            .into_iter(),
         );
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
