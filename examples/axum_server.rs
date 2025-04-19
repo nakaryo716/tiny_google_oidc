@@ -105,7 +105,7 @@ async fn start_auth(
     }
     // Generate Nonce
     let nonce = Nonce::new();
-    let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+    let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
 
     // Construct CodeRequest from config, scope, csrf_token, nonce
     let req = CodeRequest::new(true, &app_state.config, scope, &state, &nonce);
