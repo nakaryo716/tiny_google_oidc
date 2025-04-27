@@ -28,7 +28,7 @@ use axum_extra::extract::{CookieJar, cookie::Cookie};
 use http::{StatusCode, header::HOST};
 use serde::Deserialize;
 use tiny_google_oidc::{
-    code::{AdditionalScope, CodeRequest, UnCheckedCodeResponse},
+    code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
     config::{Config, ConfigBuilder},
     csrf_token::CSRFToken,
     executer::{Executer, IDTokenExe, RefreshTokenExe, RevokeTokenExe},
@@ -108,7 +108,7 @@ async fn start_auth(
     let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
 
     // Construct CodeRequest from config, scope, csrf_token, nonce
-    let req = CodeRequest::new(true, &app_state.config, scope, &state, &nonce);
+    let req = CodeRequest::new(AccessType::Offline, &app_state.config, scope, &state, &nonce);
     // Convert as URL
     let url = req
         .into_url()
