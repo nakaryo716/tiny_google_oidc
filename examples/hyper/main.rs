@@ -33,7 +33,6 @@ mod router;
 mod login_service;
 
 static REDIS_URL: &str = "redis://localhost:6379";
-static PORT: u16 = 80;
 // Google OpenID Connect
 // Change me according to client_secret.json that is downloaded
 // auth_endpoint
@@ -60,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("Failed to establish redis connection");
 
-    let addr = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), PORT);
+    let addr = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 80);
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .expect("Failed to bind tcp listener");

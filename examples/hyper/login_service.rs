@@ -9,7 +9,7 @@ use http_body_util::{BodyExt, Empty, combinators::BoxBody};
 use hyper::body::Incoming;
 use redis::{aio::ConnectionManager, cmd};
 use tiny_google_oidc::{
-    code::{AdditionalScope, CodeRequest, UnCheckedCodeResponse},
+    code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
     config::Config,
     csrf_token::CSRFToken,
     executer::{Executer, IDTokenExe},
@@ -48,7 +48,7 @@ impl LoginService {
 
         // Specify the OpenId Connect scope
         // Specify that the email and username should be included in the ID token
-        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
 
         // Store CSRF token in Redis
         let _ = cmd("SET")
@@ -59,7 +59,7 @@ impl LoginService {
 
         // Generate CodeRequest and make it into URL
         let url =
-            CodeRequest::new(false, &self.config, scope, &csrf_token, &Nonce::new()).into_url()?;
+            CodeRequest::new(AccessType::Offline, &self.config, scope, &csrf_token, &Nonce::new()).into_url()?;
 
         let res = Response::builder()
             .status(StatusCode::SEE_OTHER)
