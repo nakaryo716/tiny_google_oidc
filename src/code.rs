@@ -69,6 +69,16 @@ use std::{
     iter::Iterator,
 };
 
+/// Indicates a value of ```access_type``` query param.  
+/// 
+/// ```Offline``` allows include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
+/// ```Online``` **not** allow include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AccessType {
+    Online,
+    Offline
+}
+
 /// Optional Scope Parameters  
 ///
 /// In an OpenID Connect authentication request, the `scope` parameter specifies the type of user information
@@ -175,7 +185,7 @@ impl From<String> for Code {
 /// let csrf_token = CSRFToken::new().unwrap();
 /// let nonce = Nonce::new().unwrap();
 ///
-/// let request = CodeRequest::new(true, &config, None, &csrf_token, &nonce);
+/// let request = CodeRequest::new(AccessType::Online, &config, None, &csrf_token, &nonce);
 /// let url = request.into_url().unwrap();
 /// println!("Auth URL: {}", url);
 /// ```
@@ -189,7 +199,7 @@ where
     response_type: String,
     scope: Option<S>,
     redirect_uri: RedirectURI,
-    access_type: bool,
+    access_type: AccessType,
     state: CSRFToken,
     nonce: Nonce,
 }
@@ -200,9 +210,9 @@ where
 {
     /// # **Parameters**
     ///
-    /// - `access_type` (`bool`):
-    ///   - `true` → Requests an **offline** access token (includes a refresh token).
-    ///   - `false` → Requests an **online** access token (no refresh token).
+    /// - `access_type` (AccessType):
+    ///   - Offline → Requests an **offline** access token (includes a refresh token).
+    ///   - Online → Requests an **online** access token (no refresh token).
     ///
     /// - `config` (`&Config`):
     ///   - Contains necessary settings such as `client_id`, `auth_endpoint`, and `redirect_uri`.
@@ -217,7 +227,7 @@ where
     /// - `nonce` (`&Nonce`):
     ///   - A **nonce value** used to mitigate replay attacks.
     pub fn new(
-        access_type: bool,
+        access_type: AccessType,
         config: &Config,
         scope: Option<S>,
         state: &CSRFToken,
@@ -237,10 +247,9 @@ where
 
     /// Constructs a URL with the required parameters for Google authentication.
     pub fn into_url(&self) -> Result<String, Error> {
-        let access_type = if self.access_type {
-            "offline"
-        } else {
-            "online"
+        let access_type = match self.access_type {
+            AccessType::Online => "online",
+            AccessType::Offline => "offline"
         };
 
         let scope = self
@@ -319,7 +328,7 @@ impl UnCheckedCodeResponse {
 mod tests {
     use std::iter::Empty;
 
-    use crate::{config::ConfigBuilder, csrf_token::CSRFToken, nonce::Nonce};
+    use crate::{code::AccessType, config::ConfigBuilder, csrf_token::CSRFToken, nonce::Nonce};
 
     use super::{AdditionalScope, CodeRequest};
 
@@ -327,8 +336,8 @@ mod tests {
 
     // ==========CodeRequest methods==========
     #[test]
-    fn test_code_req_new_some_scope() {
-        let access_type = true;
+    fn test_code_req_offline() {
+        let access_type = AccessType::Offline;
 
         let auth_endpoint = "https://auth.example.com/auth";
         let client_id = "my_client_id";
@@ -348,7 +357,43 @@ mod tests {
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
+        let code_req = CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
+
+        assert_eq!(code_req.access_type, access_type);
+        assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
+        assert_eq!(code_req.client_id.0, client_id);
+        assert_eq!(code_req.redirect_uri.0, redirect_uri);
+        assert_eq!(code_req.state, state);
+        assert_eq!(code_req.nonce, nonce);
+
+        let expected_scope: Vec<AdditionalScope> = scope.unwrap().collect();
+        let actual_scope: Vec<AdditionalScope> = code_req.scope.unwrap().collect();
+        assert_eq!(actual_scope, expected_scope);
+    }
+
+    #[test]
+    fn test_code_req_new_some_scope() {
+        let access_type = AccessType::Online;
+
+        let auth_endpoint = "https://auth.example.com/auth";
+        let client_id = "my_client_id";
+        let client_secret = "my_secret";
+        let token_endpoint = "https://token.example.com";
+        let redirect_uri = "https://redirect.example.com";
+
+        let config = ConfigBuilder::new()
+            .auth_endpoint(auth_endpoint)
+            .client_id(client_id)
+            .client_secret(client_secret)
+            .token_endpoint(token_endpoint)
+            .redirect_uri(redirect_uri)
+            .build();
+
+        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+        let state = CSRFToken::new().unwrap();
+        let nonce = Nonce::new();
+
+        let code_req = CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
 
         assert_eq!(code_req.access_type, access_type);
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
@@ -364,7 +409,7 @@ mod tests {
 
     #[test]
     fn test_code_req_new_none_scope() {
-        let access_type = true;
+        let access_type = AccessType::Online;
 
         let auth_endpoint = "https://auth.example.com/auth";
         let client_id = "my_client_id";
@@ -384,7 +429,7 @@ mod tests {
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
+        let code_req = CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
 
         assert_eq!(code_req.access_type, access_type);
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
@@ -397,7 +442,7 @@ mod tests {
 
     #[test]
     fn test_code_req_into_url() {
-        let access_type = true;
+        let access_type = AccessType::Online;
 
         let auth_endpoint = "https://auth.example.com/auth";
         let client_id = "my_client_id";
@@ -426,7 +471,7 @@ mod tests {
             "code",
             client_id,
             "openid email profile",
-            "offline",
+            "online",
             redirect_url,
             state.0,
             nonce.0,
@@ -436,7 +481,7 @@ mod tests {
 
     #[test]
     fn test_code_req_into_url_scope_one() {
-        let access_type = true;
+        let access_type = AccessType::Online;
 
         let auth_endpoint = "https://auth.example.com/auth";
         let client_id = "my_client_id";
@@ -465,7 +510,7 @@ mod tests {
             "code",
             client_id,
             "openid email",
-            "offline",
+            "online",
             redirect_url,
             state.0,
             nonce.0,
@@ -475,7 +520,7 @@ mod tests {
 
     #[test]
     fn test_code_req_into_url_scope_none() {
-        let access_type = true;
+        let access_type = AccessType::Online;
 
         let auth_endpoint = "https://auth.example.com/auth";
         let client_id = "my_client_id";
@@ -500,14 +545,14 @@ mod tests {
         let url = code_req.into_url().unwrap();
         let expected_url = format!(
             "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
-            auth_endpoint, "code", client_id, "openid", "offline", redirect_url, state.0, nonce.0,
+            auth_endpoint, "code", client_id, "openid", "online", redirect_url, state.0, nonce.0,
         );
         assert_eq!(url, expected_url);
     }
 
     #[test]
     fn test_code_req_into_url_scope_duplicate() {
-        let access_type = true;
+        let access_type = AccessType::Online;
 
         let auth_endpoint = "https://auth.example.com/auth";
         let client_id = "my_client_id";
@@ -542,7 +587,7 @@ mod tests {
             "code",
             client_id,
             "openid email profile",
-            "offline",
+            "online",
             redirect_url,
             state.0,
             nonce.0,
