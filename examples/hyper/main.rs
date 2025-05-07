@@ -2,23 +2,25 @@
 // by using hyper
 //
 // # Run
-// ## Oauth settings in cloud console 
+// ## Oauth settings in cloud console
 // At first, you should set up Oauth settings in Google cloud console
 // Inside setting page, set parameter like this
 // - Origin JavascriptURL: http://localhost
 // - RedirectURL: http://localhost/auth/callback
-// 
+//
 // ## Run Redis
 // Run redis container
 // In ./examples/hyper directory,
 // ```docker compose up```
 //
-// ## Run application 
+// ## Run application
 // ```cargo run --example hyper```
 // ## Access
 // You can access http://localhost/
 use std::{
-    net::{Ipv4Addr, SocketAddrV4}, sync::Arc, time::Duration
+    net::{Ipv4Addr, SocketAddrV4},
+    sync::Arc,
+    time::Duration,
 };
 
 use hyper::server::conn::http1;
@@ -28,9 +30,9 @@ use router::Router;
 use tiny_google_oidc::config::ConfigBuilder;
 use tracing::{error, info};
 
+mod login_service;
 mod protected;
 mod router;
-mod login_service;
 
 static REDIS_URL: &str = "redis://localhost:6379";
 // Google OpenID Connect
@@ -67,13 +69,15 @@ async fn main() -> anyhow::Result<()> {
     info!("Server is running");
 
     // Construct Config That is warped by Arc
-    let config = Arc::new(ConfigBuilder::new()
-        .auth_endpoint(AUTH_ENDPOINT)
-        .client_id(CLIENT_ID)
-        .client_secret(CLIENT_SECRET)
-        .redirect_uri(REDIRECT_URL)
-        .token_endpoint(TOKEN_ENDPOINT)
-        .build());
+    let config = Arc::new(
+        ConfigBuilder::new()
+            .auth_endpoint(AUTH_ENDPOINT)
+            .client_id(CLIENT_ID)
+            .client_secret(CLIENT_SECRET)
+            .redirect_uri(REDIRECT_URL)
+            .token_endpoint(TOKEN_ENDPOINT)
+            .build(),
+    );
 
     // Routing services
     // login, rootPage, protectedPage(session)...

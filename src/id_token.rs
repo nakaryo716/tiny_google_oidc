@@ -1,5 +1,5 @@
-//! Provides the process of requesting and decode IDToken. 
-//! 
+//! Provides the process of requesting and decode IDToken.
+//!
 //! This module:
 //! IDTokenRequest: A data structure for sending requests to the token endpoint.
 //! IDTokenResponse: A data structure for parsing the response from the token endpoint.
@@ -35,20 +35,20 @@ impl AccessToken {
 /// An ID token contains user authentication and profile information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IDToken {
-    pub iss: String,  // Issuer (e.g., "https://accounts.google.com")
-    pub aud: String,  // Client ID
-    pub sub: String,  // User ID (Unique identifier for Google accounts)
-    pub azp: Option<String>,  // Authorized party (Optional)
-    pub email: Option<String>,  // User's email address
-    pub email_verified: Option<bool>,  // Whether the email is verified
-    pub given_name: Option<String>,  // Given name
+    pub iss: String,                  // Issuer (e.g., "https://accounts.google.com")
+    pub aud: String,                  // Client ID
+    pub sub: String,                  // User ID (Unique identifier for Google accounts)
+    pub azp: Option<String>,          // Authorized party (Optional)
+    pub email: Option<String>,        // User's email address
+    pub email_verified: Option<bool>, // Whether the email is verified
+    pub given_name: Option<String>,   // Given name
     pub family_name: Option<String>,  // Family name
-    pub name: Option<String>,  // Full name
-    pub picture: Option<String>,  // Profile picture URL
-    pub at_hash: Option<String>,  // Access token hash
-    pub iat: u32,  // Issued-at timestamp (UNIX time)
-    pub exp: u32,  // Expiration timestamp (UNIX time)
-    pub nonce: Option<Nonce>,  // Nonce for security validation
+    pub name: Option<String>,         // Full name
+    pub picture: Option<String>,      // Profile picture URL
+    pub at_hash: Option<String>,      // Access token hash
+    pub iat: u32,                     // Issued-at timestamp (UNIX time)
+    pub exp: u32,                     // Expiration timestamp (UNIX time)
+    pub nonce: Option<Nonce>,         // Nonce for security validation
 }
 
 impl IDToken {

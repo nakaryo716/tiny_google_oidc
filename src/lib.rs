@@ -1,5 +1,5 @@
 //! Tiny library for Google's OpenID Connect.  
-//! 
+//!
 //! This library provides essential tools for handling Google's OpenID Connect flow, including
 //! generating authentication URLs, verifying tokens, and managing access/refresh tokens.  
 //! Implementation in server flow.

@@ -3,7 +3,8 @@ use std::sync::Arc;
 use bytes::Bytes;
 use cookie::{Cookie, CookieBuilder, SameSite};
 use http::{
-    header::{COOKIE, HOST, LOCATION, SET_COOKIE}, HeaderValue, Request, Response, StatusCode
+    HeaderValue, Request, Response, StatusCode,
+    header::{COOKIE, HOST, LOCATION, SET_COOKIE},
 };
 use http_body_util::{BodyExt, Empty, combinators::BoxBody};
 use hyper::body::Incoming;
@@ -58,8 +59,14 @@ impl LoginService {
             .await?;
 
         // Generate CodeRequest and make it into URL
-        let url =
-            CodeRequest::new(AccessType::Offline, &self.config, scope, &csrf_token, &Nonce::new()).into_url()?;
+        let url = CodeRequest::new(
+            AccessType::Offline,
+            &self.config,
+            scope,
+            &csrf_token,
+            &Nonce::new(),
+        )
+        .into_url()?;
 
         let res = Response::builder()
             .status(StatusCode::SEE_OTHER)

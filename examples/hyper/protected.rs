@@ -1,7 +1,8 @@
 use bytes::Bytes;
 use cookie::Cookie;
 use http::{
-    header::{COOKIE, LOCATION}, HeaderValue, Request, Response, StatusCode
+    HeaderValue, Request, Response, StatusCode,
+    header::{COOKIE, LOCATION},
 };
 use http_body_util::{BodyExt, Empty, Full, combinators::BoxBody};
 use hyper::body::Incoming;
@@ -29,7 +30,6 @@ impl ProtectedService {
         };
         let cookies = Self::parse_cookies(&cookie_header_val)?;
 
-
         // Find a Cookie with key "session"
         let session_id = match cookies.iter().find(|c| c.name() == SESSION_COOKIE_KEY) {
             Some(cookie) => cookie.value(),
@@ -46,7 +46,7 @@ impl ProtectedService {
                     .unwrap();
                 Ok(res)
             }
-            None => Ok(see_location_res("/")) 
+            None => Ok(see_location_res("/")),
         }
     }
 

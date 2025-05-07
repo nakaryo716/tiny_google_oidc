@@ -1,5 +1,5 @@
 //! Defines structures and builders related to authentication configuration.  
-//! 
+//!
 //! Provides a structured way to handle credentials
 //! and endpoints required for authentication and token exchange.
 //!
@@ -25,9 +25,8 @@
 #[derive(Debug, Clone, Default)]
 pub(crate) struct AuthEndPoint(pub String);
 
-
 /// Holds all necessary authentication information required for Google's OpenID Connect flow.  
-/// 
+///
 /// It is designed to be immutable once constructed.
 ///
 /// # Fields
@@ -105,8 +104,6 @@ pub(crate) struct TokenEndPoint(pub String);
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct RedirectURI(pub String);
-
-
 
 // ==========impl ConfigBuilder==========
 impl ConfigBuilder {
