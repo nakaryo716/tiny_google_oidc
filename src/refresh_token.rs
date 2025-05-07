@@ -1,5 +1,5 @@
 //! provides functionality for handling refresh tokens.  
-//! 
+//!
 //! This module includes:
 //! - RefreshToken: A structure representing the refresh token.
 //! - RefreshTokenRequest: A structure for sending a request to Google's OAuth 2.0 token endpoint.

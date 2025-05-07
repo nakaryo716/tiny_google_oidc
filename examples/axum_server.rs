@@ -108,7 +108,13 @@ async fn start_auth(
     let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
 
     // Construct CodeRequest from config, scope, csrf_token, nonce
-    let req = CodeRequest::new(AccessType::Offline, &app_state.config, scope, &state, &nonce);
+    let req = CodeRequest::new(
+        AccessType::Offline,
+        &app_state.config,
+        scope,
+        &state,
+        &nonce,
+    );
     // Convert as URL
     let url = req
         .into_url()

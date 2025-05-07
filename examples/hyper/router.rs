@@ -1,15 +1,15 @@
 use std::{convert::Infallible, pin::Pin, sync::Arc};
 
 use bytes::Bytes;
-use http_body_util::{combinators::BoxBody, BodyExt, Empty, StreamBody};
+use futures_util::TryStreamExt;
+use http_body_util::{BodyExt, Empty, StreamBody, combinators::BoxBody};
 use hyper::{Request, Response, StatusCode, body::Incoming, service::Service};
 use redis::aio::ConnectionManager;
 use tiny_google_oidc::config::Config;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
-use futures_util::TryStreamExt;
 
-use crate::{protected::ProtectedService, login_service::LoginService};
+use crate::{login_service::LoginService, protected::ProtectedService};
 
 #[derive(Clone)]
 pub struct Router {
@@ -36,7 +36,7 @@ impl Router {
 
 // Routing
 // - "/" return html file
-// - "/auth" is open id connect auth entry point 
+// - "/auth" is open id connect auth entry point
 // - "/auth/callback" is redirect path from Google
 // - "/protected" provides information about the user who has a session
 impl Service<Request<Incoming>> for Router {

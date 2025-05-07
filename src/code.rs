@@ -70,13 +70,13 @@ use std::{
 };
 
 /// Indicates a value of ```access_type``` query param.  
-/// 
+///
 /// ```Offline``` allows include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
 /// ```Online``` **not** allow include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AccessType {
     Online,
-    Offline
+    Offline,
 }
 
 /// Optional Scope Parameters  
@@ -249,7 +249,7 @@ where
     pub fn into_url(&self) -> Result<String, Error> {
         let access_type = match self.access_type {
             AccessType::Online => "online",
-            AccessType::Offline => "offline"
+            AccessType::Offline => "offline",
         };
 
         let scope = self
@@ -357,7 +357,8 @@ mod tests {
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
+        let code_req =
+            CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
 
         assert_eq!(code_req.access_type, access_type);
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
@@ -393,7 +394,8 @@ mod tests {
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
+        let code_req =
+            CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
 
         assert_eq!(code_req.access_type, access_type);
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
@@ -429,7 +431,8 @@ mod tests {
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
+        let code_req =
+            CodeRequest::new(access_type.clone(), &config, scope.clone(), &state, &nonce);
 
         assert_eq!(code_req.access_type, access_type);
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
@@ -568,13 +571,11 @@ mod tests {
             .redirect_uri(redirect_url)
             .build();
 
-        let scope = Some(
-            [
-                AdditionalScope::Email,
-                AdditionalScope::Profile,
-                AdditionalScope::Email,
-            ]
-        );
+        let scope = Some([
+            AdditionalScope::Email,
+            AdditionalScope::Profile,
+            AdditionalScope::Email,
+        ]);
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 

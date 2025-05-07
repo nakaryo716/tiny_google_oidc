@@ -6,7 +6,7 @@ use tracing::error;
 use crate::error::Error;
 
 /// A randomly generated CSRF token created using `OsRng` and Base64URL-encoded.
-/// 
+///
 /// This token is used to prevent CSRF attacks by verifying that the request originates from the client.
 /// # Example
 /// ```rust, no_run
@@ -42,7 +42,7 @@ impl CSRFToken {
 }
 
 /// A CSRF token received from Google's authentication response.
-/// 
+///
 /// This token **has not been verified yet** and should be checked against the stored `CSRFToken` before proceeding.
 #[derive(Debug, Clone)]
 pub struct UnCheckedCSRFToken(pub(crate) String);
