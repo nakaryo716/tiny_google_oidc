@@ -56,11 +56,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Build Config
     let config = ConfigBuilder::new()
-        .auth_endpoint(&auth_endpoint)
-        .client_id(&client_id)
-        .client_secret(&client_secret)
-        .token_endpoint(&token_endpoint)
-        .redirect_uri(&redirect_uri)
+        .auth_endpoint(auth_endpoint)
+        .client_id(client_id)
+        .client_secret(client_secret)
+        .token_endpoint(token_endpoint)
+        .redirect_uri(redirect_uri)
         .build();
 
     // application state that hold Config
