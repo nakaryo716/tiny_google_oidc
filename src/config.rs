@@ -62,6 +62,26 @@ impl Config {
     pub fn builder() -> ConfigBuilder {
         ConfigBuilder::default()
     }
+
+    pub fn auth_endpoint(&self) -> &AuthEndPoint {
+        &self.auth_endpoint
+    }
+
+    pub fn client_id(&self) -> &ClientID {
+        &self.client_id
+    }
+
+    pub fn client_secret(&self) -> &ClientSecret {
+        &self.client_secret
+    }
+
+    pub fn token_endpoint(&self) -> &TokenEndPoint {
+        &self.token_endpoint
+    }
+
+    pub fn redirect_uri(&self) -> &RedirectURI {
+        &self.redirect_uri
+    }
 }
 
 /// Provides a convenient way to create a `Config` instance step by step.  
