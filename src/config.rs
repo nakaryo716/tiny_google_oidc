@@ -22,9 +22,6 @@
 //!
 //! This ensures a structured and safe way to manage configuration details.
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct AuthEndPoint(pub String);
-
 /// Holds all necessary authentication information required for Google's OpenID Connect flow.  
 ///
 /// It is designed to be immutable once constructed.
@@ -58,7 +55,7 @@ pub struct Config {
     pub(crate) token_endpoint: TokenEndPoint,
     pub(crate) redirect_uri: RedirectURI,
 }
-// ==========impl Config==========
+
 impl Config {
     /// Returns a new `ConfigBuilder` instance to create a `Config` object.  
     /// This method provides a convenient way to start building a `Config` instance.
@@ -93,19 +90,6 @@ pub struct ConfigBuilder {
     redirect_uri: RedirectURI,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
-pub(crate) struct ClientID(pub String);
-
-#[derive(Debug, Clone, Default, PartialEq)]
-pub(crate) struct ClientSecret(pub String);
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct TokenEndPoint(pub String);
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct RedirectURI(pub String);
-
-// ==========impl ConfigBuilder==========
 impl ConfigBuilder {
     /// Creates a new `ConfigBuilder` instance with default values.
     pub fn new() -> Self {
@@ -154,7 +138,21 @@ impl ConfigBuilder {
     }
 }
 
-// ==========Tests==========
+#[derive(Debug, Clone, Default)]
+pub(crate) struct AuthEndPoint(pub String);
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(crate) struct ClientID(pub String);
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(crate) struct ClientSecret(pub String);
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct TokenEndPoint(pub String);
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct RedirectURI(pub String);
+
 #[cfg(test)]
 mod tests {
     use crate::config::Config;
