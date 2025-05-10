@@ -57,6 +57,7 @@
 //! - Do not use `UnCheckedCodeResponse` directly without verification.
 use itertools::Itertools;
 use tracing::error;
+use url::Url;
 
 use crate::{
     config::{AuthEndPoint, ClientID, Config, RedirectURI},
@@ -185,7 +186,7 @@ where
     }
 
     /// Constructs a URL with the required parameters for Google authentication.
-    pub fn into_url(&self) -> Result<String, Error> {
+    pub fn try_into_url(self) -> Result<Url, Error> {
         let access_type = match self.access_type {
             AccessType::Online => "online",
             AccessType::Offline => "offline",
@@ -220,6 +221,7 @@ where
             self.state.0,
             self.nonce.0,
         );
+        let url = Url::parse(&url).map_err(|_| Error::URL)?;
         Ok(url)
     }
 }
@@ -320,6 +322,8 @@ pub enum AdditionalScope {
 #[cfg(test)]
 mod tests {
     use std::iter::Empty;
+
+    use url::Url;
 
     use crate::{code::AccessType, config::ConfigBuilder, csrf_token::CSRFToken, nonce::Nonce};
 
@@ -457,7 +461,7 @@ mod tests {
 
         let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
 
-        let url = code_req.into_url().unwrap();
+        let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
             "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
             auth_endpoint,
@@ -469,7 +473,7 @@ mod tests {
             state.0,
             nonce.0,
         );
-        assert_eq!(url, expected_url);
+        assert_eq!(url, Url::parse(&expected_url).unwrap());
     }
 
     #[test]
@@ -496,7 +500,7 @@ mod tests {
 
         let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
 
-        let url = code_req.into_url().unwrap();
+        let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
             "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
             auth_endpoint,
@@ -508,7 +512,7 @@ mod tests {
             state.0,
             nonce.0,
         );
-        assert_eq!(url, expected_url);
+        assert_eq!(url, Url::parse(&expected_url).unwrap());
     }
 
     #[test]
@@ -535,12 +539,12 @@ mod tests {
 
         let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
 
-        let url = code_req.into_url().unwrap();
+        let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
             "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
             auth_endpoint, "code", client_id, "openid", "online", redirect_url, state.0, nonce.0,
         );
-        assert_eq!(url, expected_url);
+        assert_eq!(url, Url::parse(&expected_url).unwrap());
     }
 
     #[test]
@@ -570,7 +574,7 @@ mod tests {
         let nonce = Nonce::new();
 
         let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
-        let url = code_req.into_url().unwrap();
+        let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
             "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
             auth_endpoint,
@@ -582,6 +586,6 @@ mod tests {
             state.0,
             nonce.0,
         );
-        assert_eq!(url, expected_url);
+        assert_eq!(url, Url::parse(&expected_url).unwrap());
     }
 }
