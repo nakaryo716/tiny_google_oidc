@@ -8,8 +8,8 @@
 //! - `ConfigBuilder`: A builder for constructing a `Config` instance.
 //!
 //! # Example
-//! ```rust,no_run
-//! use your_crate::config::Config;
+//! ```rust
+//! use tny_google_oidc::config::Config;
 //!
 //! let config = Config::builder()
 //!     .auth_endpoint("https://accounts.google.com/o/oauth2/auth")
@@ -36,8 +36,8 @@
 /// This struct is primarily built using the `ConfigBuilder`.
 ///
 /// # Example
-/// ```rust,no_run
-/// use your_crate::config::Config;
+/// ```rust
+/// use tiny_google_oidc::config::Config;
 ///
 /// let config = Config::builder()
 ///     .auth_endpoint("https://accounts.google.com/o/oauth2/auth")
@@ -69,8 +69,8 @@ impl Config {
 /// object is constructed.
 ///
 /// # Example
-/// ```rust,no_run
-/// use your_crate::config::ConfigBuilder;
+/// ```rust
+/// use tiny_google_oidc::config::ConfigBuilder;
 ///
 /// let builder = ConfigBuilder::new()
 ///     .auth_endpoint("https://accounts.google.com/o/oauth2/auth")
@@ -97,8 +97,32 @@ impl ConfigBuilder {
     }
 
     /// Sets the authorization endpoint URL.
-    pub fn auth_endpoint(mut self, auth_endpoint: &str) -> ConfigBuilder {
-        self.auth_endpoint = AuthEndPoint(auth_endpoint.to_string());
+    pub fn auth_endpoint<T: Into<AuthEndPoint>>(mut self, auth_endpoint: T) -> ConfigBuilder {
+        self.auth_endpoint = auth_endpoint.into();
+        self
+    }
+
+    /// Sets the client ID obtained from Google Cloud Console.
+    pub fn client_id<T: Into<ClientID>>(mut self, client_id: T) -> Self {
+        self.client_id = client_id.into();
+        self
+    }
+
+    /// Sets the client secret associated with the client ID.
+    pub fn client_secret<T: Into<ClientSecret>>(mut self, client_secret: T) -> Self {
+        self.client_secret = client_secret.into();
+        self
+    }
+
+    /// Sets the token exchange endpoint URL.
+    pub fn token_endpoint<T: Into<TokenEndPoint>>(mut self, token_endpoint: T) -> Self {
+        self.token_endpoint = token_endpoint.into();
+        self
+    }
+
+    /// Sets the redirect URI registered in Google Cloud Console.
+    pub fn redirect_uri<T: Into<RedirectURI>>(mut self, redirect_uri: T) -> Self {
+        self.redirect_uri = redirect_uri.into();
         self
     }
 
@@ -112,46 +136,219 @@ impl ConfigBuilder {
             redirect_uri: self.redirect_uri,
         }
     }
+}
 
-    /// Sets the client ID obtained from Google Cloud Console.
-    pub fn client_id(mut self, client_id: &str) -> Self {
-        self.client_id = ClientID(client_id.to_string());
-        self
+/// Represents the authorization endpoint URL used in Google's OpenID Connect flow.
+///
+/// This tuple struct is a simple wrapper around a `String` and is used to specify
+/// the URL where the authorization request is sent.
+///
+/// # Purpose
+/// The `AuthEndPoint` struct is used as part of the `Config` to define the endpoint
+/// for initiating the OpenID Connect authentication flow.
+///
+/// # Example
+/// ```rust
+/// use tiny_google_oidc::config::AuthEndPoint;
+/// let endpoint_str = "https://accounts.google.com/o/oauth2/auth";
+/// let auth_endpoint: AuthEndPoint = endpoint_str.into();
+/// assert_eq!(auth_endpoint, AuthEndPoint(endpoint_str.to_string()))
+/// ```
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct AuthEndPoint(pub(crate) String);
+
+impl AuthEndPoint {
+    pub fn new(endpoint: String) -> Self {
+        AuthEndPoint(endpoint)
     }
 
-    /// Sets the client secret associated with the client ID.
-    pub fn client_secret(mut self, client_secret: &str) -> Self {
-        self.client_secret = ClientSecret(client_secret.to_string());
-        self
-    }
-
-    /// Sets the token exchange endpoint URL.
-    pub fn token_endpoint(mut self, token_endpoint: &str) -> Self {
-        self.token_endpoint = TokenEndPoint(token_endpoint.to_string());
-        self
-    }
-
-    /// Sets the redirect URI registered in Google Cloud Console.
-    pub fn redirect_uri(mut self, redirect_url: &str) -> Self {
-        self.redirect_uri = RedirectURI(redirect_url.to_string());
-        self
+    pub fn value(&self) -> &str {
+        &self.0
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct AuthEndPoint(pub String);
+impl From<&str> for AuthEndPoint {
+    fn from(value: &str) -> Self {
+        AuthEndPoint(value.to_string())
+    }
+}
 
+impl From<String> for AuthEndPoint {
+    fn from(value: String) -> Self {
+        AuthEndPoint(value)
+    }
+}
+
+/// Represents the client ID used in Google's OpenID Connect flow.
+///
+/// This tuple struct is a simple wrapper around a `String` and is used to securely store
+/// the client ID required for authentication and token exchange.
+///
+/// # Purpose
+/// The `ClientID` struct is used as part of the `Config` to define the unique identifier
+/// for your application. This ID is provided by Google Cloud Console when registering
+/// your application.
+///
+/// # Example
+/// ```rust
+/// use tiny_google_oidc::config::ClientID;
+///
+/// let client_id_str = "your-client-id";
+/// let client_id: ClientID = client_id_str.into();
+/// assert_eq!(client_id, ClientID(client_id_str.to_string()));
+/// ```
 #[derive(Debug, Clone, Default, PartialEq)]
-pub(crate) struct ClientID(pub String);
+pub struct ClientID(pub(crate) String);
 
+impl ClientID {
+    pub fn new(id: String) -> Self {
+        ClientID(id)
+    }
+
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for ClientID {
+    fn from(value: &str) -> Self {
+        ClientID(value.to_string())
+    }
+}
+
+impl From<String> for ClientID {
+    fn from(value: String) -> Self {
+        ClientID(value)
+    }
+}
+
+/// Represents the client secret associated with the client ID in Google's OpenID Connect flow.
+///
+/// This tuple struct is a simple wrapper around a `String` and is used to securely store
+/// the client secret required for authentication and token exchange.
+///
+/// # Purpose
+/// The `ClientSecret` struct is used as part of the `Config` to define the secret key
+/// associated with the client ID. This secret is provided by Google Cloud Console
+/// when registering your application.
+///
+/// # Example
+/// ```rust
+/// use tiny_google_oidc::config::ClientSecret;
+///
+/// let secret_str = "your-client-secret";
+/// let client_secret: ClientSecret = secret_str.into();
+/// assert_eq!(client_secret, ClientSecret(secret_str.to_string()));
+/// ```
 #[derive(Debug, Clone, Default, PartialEq)]
-pub(crate) struct ClientSecret(pub String);
+pub struct ClientSecret(pub(crate) String);
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct TokenEndPoint(pub String);
+impl ClientSecret {
+    pub fn new(secret: String) -> Self {
+        ClientSecret(secret)
+    }
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct RedirectURI(pub String);
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for ClientSecret {
+    fn from(value: &str) -> Self {
+        ClientSecret(value.to_string())
+    }
+}
+
+impl From<String> for ClientSecret {
+    fn from(value: String) -> Self {
+        ClientSecret(value)
+    }
+}
+
+/// Represents the token endpoint URL used in Google's OpenID Connect flow.
+///
+/// This tuple struct is a simple wrapper around a `String` and is used to specify
+/// the URL where the token exchange request is sent.
+///
+/// # Purpose
+/// The `TokenEndPoint` struct is used as part of the `Config` to define the endpoint
+/// for exchanging an authorization code for tokens (e.g., ID token, access token).
+///
+/// # Example
+/// ```rust
+/// use tiny_google_oidc::config::TokenEndPoint;
+///
+/// let token_endpoint_str = "https://oauth2.googleapis.com/token";
+/// let token_endpoint: TokenEndPoint = token_endpoint_str.into();
+/// assert_eq!(token_endpoint, TokenEndPoint(token_endpoint_str.to_string()));
+/// ```
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct TokenEndPoint(pub(crate) String);
+
+impl TokenEndPoint {
+    pub fn new(endpoint: String) -> Self {
+        TokenEndPoint(endpoint)
+    }
+
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for TokenEndPoint {
+    fn from(value: &str) -> Self {
+        TokenEndPoint(value.to_string())
+    }
+}
+
+impl From<String> for TokenEndPoint {
+    fn from(value: String) -> Self {
+        TokenEndPoint(value)
+    }
+}
+
+/// Represents the redirect URI registered in Google's OpenID Connect flow.
+///
+/// This tuple struct is a simple wrapper around a `String` and is used to specify
+/// the URI where Google redirects the user after authentication.
+///
+/// # Purpose
+/// The `RedirectURI` struct is used as part of the `Config` to define the URI
+/// that is registered in the Google Cloud Console for your application. This URI
+/// must match the one provided during the authentication request.
+///
+/// # Example
+/// ```rust
+/// use tiny_google_oidc::config::RedirectURI;
+///
+/// let redirect_uri_str = "https://your-app.com/callback";
+/// let redirect_uri: RedirectURI = redirect_uri_str.into();
+/// assert_eq!(redirect_uri, RedirectURI(redirect_uri_str.to_string()));
+/// ```
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct RedirectURI(pub(crate) String);
+
+impl RedirectURI {
+    pub fn new(uri: String) -> Self {
+        RedirectURI(uri)
+    }
+
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for RedirectURI {
+    fn from(value: &str) -> Self {
+        RedirectURI(value.to_string())
+    }
+}
+
+impl From<String> for RedirectURI {
+    fn from(value: String) -> Self {
+        RedirectURI(value)
+    }
+}
 
 #[cfg(test)]
 mod tests {
