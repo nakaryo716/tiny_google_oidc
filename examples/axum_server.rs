@@ -117,9 +117,9 @@ async fn start_auth(
     );
     // Convert as URL
     let url = req
-        .into_url()
+        .try_into_url()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok((jar.add(cookie), Redirect::to(&url)))
+    Ok((jar.add(cookie), Redirect::to(&url.to_string())))
 }
 
 async fn call_back(
