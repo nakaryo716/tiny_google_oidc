@@ -69,61 +69,6 @@ use std::{
     iter::Iterator,
 };
 
-/// Indicates a value of ```access_type``` query param.  
-///
-/// ```Offline``` allows include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
-/// ```Online``` **not** allow include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AccessType {
-    Online,
-    Offline,
-}
-
-/// Optional Scope Parameters  
-///
-/// In an OpenID Connect authentication request, the `scope` parameter specifies the type of user information
-/// that should be included in the ID token. By default, the `openid` scope is required for authentication.
-/// This enum allows adding **optional** scopes, such as `email` or `profile`, to the request.
-///
-/// # Purpose
-/// `AdditionalScope` is used to extend the default `scope` parameter when creating a `CodeRequest`.
-/// It enables applications to request additional user information from Google.
-///
-/// # Variants
-///
-/// ## `Email`
-/// - Requests the user's **email address** and **email verification status**.
-/// - This is useful if the application needs to identify the user by their email address.
-///
-/// ## `Profile`
-/// - Requests the user's **name, profile picture URL, and other basic profile information**.
-/// - This is useful for displaying user details in the application.
-///
-/// # Usage
-/// To include `email` or `profile` in the scope, add `AdditionalScope::Email` or `AdditionalScope::Profile`
-/// when creating a `CodeRequest`.
-///
-/// # Example
-/// ```rust,no_run
-/// use crate::code::AdditionalScope;
-///
-/// let additional_scopes = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
-/// let request = CodeRequest::new(true, &config, additional_scopes, &csrf_token, &nonce);
-/// let url = request.into_url().unwrap();
-/// println!("Authorization URL: {}", url);
-/// ```
-///
-/// If **no additional scopes** are specified, the request will **only include `openid`**, which is required for authentication.
-///
-/// # Notes
-/// - Adding `email` or `profile` scopes allows the application to access more detailed user information.
-/// - Ensure that the requested scopes align with the application's privacy policy and user consent.
-#[derive(Debug, Clone, PartialEq)]
-pub enum AdditionalScope {
-    Email,
-    Profile,
-}
-
 /// Represents the value of the `code` query parameter sent by Google during the OpenID Connect flow.  
 /// This structure ensures that the `code` can only be obtained after validating the associated `CSRFToken`.
 ///
@@ -323,7 +268,61 @@ impl UnCheckedCodeResponse {
     }
 }
 
-// ==========Tests==========
+/// Indicates a value of ```access_type``` query param.  
+///
+/// ```Offline``` allows include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
+/// ```Online``` **not** allow include [`RefreshToken`](crate::refresh_token::RefreshToken) in [`IDTokenResponse`](crate::id_token::IDTokenResponse)  
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AccessType {
+    Online,
+    Offline,
+}
+
+/// Optional Scope Parameters  
+///
+/// In an OpenID Connect authentication request, the `scope` parameter specifies the type of user information
+/// that should be included in the ID token. By default, the `openid` scope is required for authentication.
+/// This enum allows adding **optional** scopes, such as `email` or `profile`, to the request.
+///
+/// # Purpose
+/// `AdditionalScope` is used to extend the default `scope` parameter when creating a `CodeRequest`.
+/// It enables applications to request additional user information from Google.
+///
+/// # Variants
+///
+/// ## `Email`
+/// - Requests the user's **email address** and **email verification status**.
+/// - This is useful if the application needs to identify the user by their email address.
+///
+/// ## `Profile`
+/// - Requests the user's **name, profile picture URL, and other basic profile information**.
+/// - This is useful for displaying user details in the application.
+///
+/// # Usage
+/// To include `email` or `profile` in the scope, add `AdditionalScope::Email` or `AdditionalScope::Profile`
+/// when creating a `CodeRequest`.
+///
+/// # Example
+/// ```rust,no_run
+/// use crate::code::AdditionalScope;
+///
+/// let additional_scopes = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+/// let request = CodeRequest::new(true, &config, additional_scopes, &csrf_token, &nonce);
+/// let url = request.into_url().unwrap();
+/// println!("Authorization URL: {}", url);
+/// ```
+///
+/// If **no additional scopes** are specified, the request will **only include `openid`**, which is required for authentication.
+///
+/// # Notes
+/// - Adding `email` or `profile` scopes allows the application to access more detailed user information.
+/// - Ensure that the requested scopes align with the application's privacy policy and user consent.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AdditionalScope {
+    Email,
+    Profile,
+}
+
 #[cfg(test)]
 mod tests {
     use std::iter::Empty;
@@ -332,9 +331,6 @@ mod tests {
 
     use super::{AdditionalScope, CodeRequest};
 
-    // ==========Code methods==========
-
-    // ==========CodeRequest methods==========
     #[test]
     fn test_code_req_offline() {
         let access_type = AccessType::Offline;
