@@ -32,7 +32,7 @@
 //! let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
 //!
 //! let request = CodeRequest::new(true, &config, scope, &csrf_token, &nonce);
-//! let url = request.into_url().unwrap();
+//! let url = request.try_into_url().unwrap();
 //! println!("Auth URL: {}", url);
 //! ```
 //!
@@ -90,7 +90,6 @@ use std::{
 /// let csrf_token = store.get("csrf_token_key")?;
 ///
 /// let code = response.exchange_with_code(csrf_token).expect("CSRF token mismatch!");
-/// println!("Verified Code: {:?}", code);
 /// ```
 ///
 /// # Notes
@@ -123,28 +122,29 @@ impl Code {
 ///     .build();
 ///
 /// let csrf_token = CSRFToken::new().unwrap();
-/// let nonce = Nonce::new().unwrap();
+/// let nonce = Nonce::new();
+/// let scope: Option<std::iter::Empty<AdditionalScope>> = None;
 ///
-/// let request = CodeRequest::new(AccessType::Online, &config, None, &csrf_token, &nonce);
-/// let url = request.into_url().unwrap();
+/// let request = CodeRequest::new(AccessType::Online, &config, scope, &csrf_token, &nonce);
+/// let url = request.try_into_url().unwrap();
 /// println!("Auth URL: {}", url);
 /// ```
 #[derive(Debug, Clone)]
-pub struct CodeRequest<S>
+pub struct CodeRequest<'a, S>
 where
     S: IntoIterator<Item = AdditionalScope>,
 {
-    auth_endpoint: AuthEndPoint,
-    client_id: ClientID,
-    response_type: String,
+    auth_endpoint: &'a AuthEndPoint,
+    client_id: &'a ClientID,
+    response_type: &'a str,
     scope: Option<S>,
-    redirect_uri: RedirectURI,
+    redirect_uri: &'a RedirectURI,
     access_type: AccessType,
-    state: CSRFToken,
-    nonce: Nonce,
+    state: &'a CSRFToken,
+    nonce: &'a Nonce,
 }
 
-impl<S> CodeRequest<S>
+impl<'a, S> CodeRequest<'a, S>
 where
     S: IntoIterator<Item = AdditionalScope> + Clone,
 {
@@ -168,20 +168,20 @@ where
     ///   - A **nonce value** used to mitigate replay attacks.
     pub fn new(
         access_type: AccessType,
-        config: &Config,
+        config: &'a Config,
         scope: Option<S>,
-        state: &CSRFToken,
-        nonce: &Nonce,
+        state: &'a CSRFToken,
+        nonce: &'a Nonce,
     ) -> Self {
         Self {
-            auth_endpoint: config.auth_endpoint.to_owned(),
-            client_id: config.client_id.to_owned(),
-            response_type: "code".to_string(),
+            auth_endpoint: &config.auth_endpoint,
+            client_id: &config.client_id,
+            response_type: "code",
             scope,
-            redirect_uri: config.redirect_uri.to_owned(),
+            redirect_uri: &config.redirect_uri,
             access_type,
-            state: state.to_owned(),
-            nonce: nonce.to_owned(),
+            state,
+            nonce,
         }
     }
 
@@ -358,8 +358,8 @@ mod tests {
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
         assert_eq!(code_req.client_id.0, client_id);
         assert_eq!(code_req.redirect_uri.0, redirect_uri);
-        assert_eq!(code_req.state, state);
-        assert_eq!(code_req.nonce, nonce);
+        assert_eq!(*code_req.state, state);
+        assert_eq!(*code_req.nonce, nonce);
 
         let expected_scope: Vec<AdditionalScope> = scope.unwrap().collect();
         let actual_scope: Vec<AdditionalScope> = code_req.scope.unwrap().collect();
@@ -395,8 +395,8 @@ mod tests {
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
         assert_eq!(code_req.client_id.0, client_id);
         assert_eq!(code_req.redirect_uri.0, redirect_uri);
-        assert_eq!(code_req.state, state);
-        assert_eq!(code_req.nonce, nonce);
+        assert_eq!(*code_req.state, state);
+        assert_eq!(*code_req.nonce, nonce);
 
         let expected_scope: Vec<AdditionalScope> = scope.unwrap().collect();
         let actual_scope: Vec<AdditionalScope> = code_req.scope.unwrap().collect();
@@ -432,8 +432,8 @@ mod tests {
         assert_eq!(code_req.auth_endpoint.0, auth_endpoint);
         assert_eq!(code_req.client_id.0, client_id);
         assert_eq!(code_req.redirect_uri.0, redirect_uri);
-        assert_eq!(code_req.state, state);
-        assert_eq!(code_req.nonce, nonce);
+        assert_eq!(*code_req.state, state);
+        assert_eq!(*code_req.nonce, nonce);
         assert!(code_req.scope.is_none())
     }
 
