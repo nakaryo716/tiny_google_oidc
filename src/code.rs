@@ -308,7 +308,7 @@ impl UnCheckedCodeResponse {
         })?;
         let params: HashMap<_, _> = url.query_pairs().map(|v| (v.0, v.1)).collect();
         Ok(Self {
-            state: params.get("state").ok_or(Error::URL)?.to_string().into(),
+            state: UnCheckedCSRFToken(params.get("state").ok_or(Error::URL)?.to_string()),
             code: params.get("code").ok_or(Error::URL)?.to_string().into(),
         })
     }
