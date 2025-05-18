@@ -66,11 +66,11 @@ impl LoginService {
             &csrf_token,
             &Nonce::new(),
         )
-        .into_url()?;
+        .try_into_url()?;
 
         let res = Response::builder()
             .status(StatusCode::SEE_OTHER)
-            .header(LOCATION, url)
+            .header(LOCATION, url.to_string())
             .header(SET_COOKIE, cookie.to_string())
             .body(Empty::new().map_err(|e| match e {}).boxed())
             .unwrap();
