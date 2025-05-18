@@ -86,23 +86,23 @@ impl IDTokenRequest {
         }
     }
 
-    pub fn token_endpoint(&self) -> &str {
-        &self.token_endpoint.0
+    pub fn token_endpoint(&self) -> &TokenEndPoint {
+        &self.token_endpoint
     }
 
-    pub fn code(&self) -> &str {
-        &self.code.0
+    pub fn code(&self) -> &Code {
+        &self.code
     }
 
-    pub fn client_id(&self) -> &str {
-        &self.client_id.0
+    pub fn client_id(&self) -> &ClientID {
+        &self.client_id
     }
 
-    pub fn client_secret(&self) -> &str {
-        &self.client_secret.0
+    pub fn client_secret(&self) -> &ClientSecret {
+        &self.client_secret
     }
-    pub fn redirect_uri(&self) -> &str {
-        &self.redirect_uri.0
+    pub fn redirect_uri(&self) -> &RedirectURI {
+        &self.redirect_uri
     }
 
     pub fn grant_type(&self) -> &str {
