@@ -64,30 +64,30 @@ impl IDToken {
 
 /// A structure used to send an ID token request to Google's token endpoint.
 #[derive(Debug, Clone)]
-pub struct IDTokenRequest {
-    token_endpoint: TokenEndPoint,
+pub struct IDTokenRequest<'a> {
+    token_endpoint: &'a TokenEndPoint,
     code: Code,
-    client_id: ClientID,
-    client_secret: ClientSecret,
-    redirect_uri: RedirectURI,
-    grant_type: String,
+    client_id: &'a ClientID,
+    client_secret: &'a ClientSecret,
+    redirect_uri: &'a RedirectURI,
+    grant_type: &'a str,
 }
 
-impl IDTokenRequest {
+impl<'a> IDTokenRequest<'a> {
     /// Creates a new request using parameters from Config.
-    pub fn new(config: &Config, code: Code) -> Self {
+    pub fn new(config: &'a Config, code: Code) -> Self {
         Self {
-            token_endpoint: config.token_endpoint.to_owned(),
+            token_endpoint: config.token_endpoint(),
             code,
-            client_id: config.client_id.to_owned(),
-            client_secret: config.client_secret.to_owned(),
-            redirect_uri: config.redirect_uri.to_owned(),
-            grant_type: "authorization_code".to_string(),
+            client_id: config.client_id(),
+            client_secret: config.client_secret(),
+            redirect_uri: config.redirect_uri(),
+            grant_type: "authorization_code",
         }
     }
 
     pub fn token_endpoint(&self) -> &TokenEndPoint {
-        &self.token_endpoint
+        self.token_endpoint
     }
 
     pub fn code(&self) -> &Code {
@@ -95,18 +95,18 @@ impl IDTokenRequest {
     }
 
     pub fn client_id(&self) -> &ClientID {
-        &self.client_id
+        self.client_id
     }
 
     pub fn client_secret(&self) -> &ClientSecret {
-        &self.client_secret
+        self.client_secret
     }
     pub fn redirect_uri(&self) -> &RedirectURI {
-        &self.redirect_uri
+        self.redirect_uri
     }
 
     pub fn grant_type(&self) -> &str {
-        &self.grant_type
+        self.grant_type
     }
 }
 

@@ -54,7 +54,7 @@ pub struct IDTokenExe;
 /// 2. Prepare the request parameters.
 /// 3. Send an HTTP POST request.
 /// 4. Parse and return the response as IDTokenResponse.
-impl<'a> Executer<'a, IDTokenRequest> for IDTokenExe {
+impl<'a> Executer<'a, IDTokenRequest<'_>> for IDTokenExe {
     type Response = IDTokenResponse;
     type Error = ExecuteError;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'a>>;
