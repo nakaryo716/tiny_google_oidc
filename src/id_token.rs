@@ -18,19 +18,6 @@ use crate::{
     nonce::Nonce,
     refresh_token::RefreshToken,
 };
-
-/// Represents an OAuth 2.0 access token.  
-/// This token is used to access Google APIs.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AccessToken(pub(crate) String);
-
-impl AccessToken {
-    /// Retrieves the access token as a string.
-    pub fn value(&self) -> String {
-        self.0.clone()
-    }
-}
-
 /// Represents a decoded ID token payload in OpenID Connect.  
 /// An ID token contains user authentication and profile information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -160,11 +147,22 @@ impl IDTokenResponse {
     }
 }
 
+/// Represents an OAuth 2.0 access token.  
+/// This token is used to access Google APIs.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AccessToken(pub(crate) String);
+
+impl AccessToken {
+    /// Retrieves the access token as a string.
+    pub fn value(&self) -> String {
+        self.0.clone()
+    }
+}
+
 /// Represents an encoded ID token, which must be decoded before use.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct IDTokenRow(String);
 
-// ==========Tests==========
 #[cfg(test)]
 mod tests {
     use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
