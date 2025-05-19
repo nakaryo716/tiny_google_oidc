@@ -22,20 +22,34 @@ use crate::{
 /// An ID token contains user authentication and profile information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IDToken {
-    pub iss: String,                  // Issuer (e.g., "https://accounts.google.com")
-    pub aud: String,                  // Client ID
-    pub sub: String,                  // User ID (Unique identifier for Google accounts)
-    pub azp: Option<String>,          // Authorized party (Optional)
-    pub email: Option<String>,        // User's email address
-    pub email_verified: Option<bool>, // Whether the email is verified
-    pub given_name: Option<String>,   // Given name
-    pub family_name: Option<String>,  // Family name
-    pub name: Option<String>,         // Full name
-    pub picture: Option<String>,      // Profile picture URL
-    pub at_hash: Option<String>,      // Access token hash
-    pub iat: u32,                     // Issued-at timestamp (UNIX time)
-    pub exp: u32,                     // Expiration timestamp (UNIX time)
-    pub nonce: Option<Nonce>,         // Nonce for security validation
+    /// Issuer (e.g., "https://accounts.google.com")
+    pub iss: String,
+    /// Client ID
+    pub aud: String,
+    /// User ID (Unique identifier for Google accounts)
+    pub sub: String,
+    /// Authorized party (Optional)
+    pub azp: Option<String>,
+    /// User's email address
+    pub email: Option<String>,
+    /// Whether the email is verified
+    pub email_verified: Option<bool>,
+    /// Given name
+    pub given_name: Option<String>,
+    /// Family name
+    pub family_name: Option<String>,
+    /// Full name
+    pub name: Option<String>,
+    /// Profile picture URL
+    pub picture: Option<String>,
+    /// Access token hash
+    pub at_hash: Option<String>,
+    /// Issued-at timestamp (UNIX time)
+    pub iat: u32,
+    /// Expiration timestamp (UNIX time)
+    pub exp: u32,
+    /// Nonce for security validation
+    pub nonce: Option<Nonce>,
 }
 
 impl IDToken {
@@ -73,7 +87,7 @@ pub struct IDTokenRequest<'a> {
 }
 
 impl<'a> IDTokenRequest<'a> {
-    /// Creates a new request using parameters from Config.
+    /// Creates a new request using parameters from Config and Code.
     pub fn new(config: &'a Config, code: Code) -> Self {
         Self {
             token_endpoint: config.token_endpoint(),
@@ -100,6 +114,7 @@ impl<'a> IDTokenRequest<'a> {
     pub fn client_secret(&self) -> &ClientSecret {
         self.client_secret
     }
+
     pub fn redirect_uri(&self) -> &RedirectURI {
         self.redirect_uri
     }
