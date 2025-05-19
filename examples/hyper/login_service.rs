@@ -130,7 +130,7 @@ impl LoginService {
         let _refresh_token = id_token_res.refresh_token();
 
         // Get IDToken(Decode)
-        let id_token = IDToken::decode_from_row(id_token_res.id_token())?;
+        let id_token = IDToken::from_id_token_row(id_token_res.id_token())?;
 
         // Create SessionID
         let session_id = Uuid::new_v4().to_string();
