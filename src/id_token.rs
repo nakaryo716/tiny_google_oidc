@@ -39,15 +39,14 @@ pub struct IDToken {
 }
 
 impl IDToken {
+    /// Construct IDToken from [`IDTokenRow`] .   
     /// Decodes an IDTokenRow (encoded ID token) into an IDToken.
-    pub fn decode_from_row(id_token: &IDTokenRow) -> Result<Self, Error> {
+    pub fn from_id_token_row(id_token: &IDTokenRow) -> Result<Self, Error> {
         let split: Vec<_> = id_token.0.split(".").collect();
         if split.len() != 3 {
             return Err(Error::Decode);
         }
-        // Caution!!!!
-        // id_token is cloned here for decode.
-        // However the cost of clone is big.
+
         let bytes = BASE64_URL_SAFE_NO_PAD.decode(split[1]).map_err(|e| {
             error!("Failed to decode IDToken: {}", e);
             Error::Decode
@@ -206,7 +205,7 @@ mod tests {
         token_row.push_str(".signature");
         let id_token_row = IDTokenRow(token_row);
 
-        let decoded = IDToken::decode_from_row(&id_token_row);
+        let decoded = IDToken::from_id_token_row(&id_token_row);
         assert!(decoded.is_ok());
     }
 
@@ -214,7 +213,7 @@ mod tests {
     fn test_id_token_decode_invalid_base64() {
         let id_token_row = IDTokenRow("invalid_base64".to_string());
 
-        let decoded = IDToken::decode_from_row(&id_token_row);
+        let decoded = IDToken::from_id_token_row(&id_token_row);
         assert!(matches!(decoded, Err(Error::Decode)));
     }
 
@@ -223,7 +222,7 @@ mod tests {
         let invalid_json = BASE64_URL_SAFE_NO_PAD.encode("not a valid json");
         let id_token_row = IDTokenRow(invalid_json);
 
-        let decoded = IDToken::decode_from_row(&id_token_row);
+        let decoded = IDToken::from_id_token_row(&id_token_row);
         assert!(matches!(decoded, Err(Error::Decode)));
     }
 
