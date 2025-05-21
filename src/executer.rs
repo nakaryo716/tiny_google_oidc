@@ -54,23 +54,23 @@ pub struct IDTokenExe;
 /// 2. Prepare the request parameters.
 /// 3. Send an HTTP POST request.
 /// 4. Parse and return the response as IDTokenResponse.
-impl<'a> Executer<'a, IDTokenRequest> for IDTokenExe {
+impl<'a> Executer<'a, IDTokenRequest<'_>> for IDTokenExe {
     type Response = IDTokenResponse;
     type Error = ExecuteError;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'a>>;
 
     fn execute(&'a self, req: &'a IDTokenRequest) -> Self::Future {
         Box::pin(async move {
-            let url = Url::parse(req.token_endpoint()).map_err(|e| {
+            let url = Url::parse(&req.token_endpoint().0).map_err(|e| {
                 error!("Failed to pase url: {:?}", e);
                 ExecuteError::URL
             })?;
 
             let mut params = HashMap::new();
-            params.insert("code", req.code());
-            params.insert("client_id", req.client_id());
-            params.insert("client_secret", req.client_secret());
-            params.insert("redirect_uri", req.redirect_uri());
+            params.insert("code", req.code().0.as_str());
+            params.insert("client_id", req.client_id().value());
+            params.insert("client_secret", req.client_secret().value());
+            params.insert("redirect_uri", req.redirect_uri().value());
             params.insert("grant_type", req.grant_type());
 
             let client = Client::new();
