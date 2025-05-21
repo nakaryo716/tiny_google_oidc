@@ -33,24 +33,44 @@ impl RefreshToken {
 
 /// Represents a request to exchange a refresh token for a new access token.
 #[derive(Debug, Clone)]
-pub struct RefreshTokenRequest {
-    pub(crate) refresh_token_endpoint: String,
-    pub(crate) client_id: ClientID,
-    pub(crate) client_secret: ClientSecret,
-    pub(crate) refresh_token: RefreshToken,
-    pub(crate) grant_type: String,
+pub struct RefreshTokenRequest<'a> {
+    pub(crate) refresh_token_endpoint: &'a str,
+    pub(crate) client_id: &'a ClientID,
+    pub(crate) client_secret: &'a ClientSecret,
+    pub(crate) refresh_token: &'a RefreshToken,
+    pub(crate) grant_type: &'a str,
 }
 
-impl RefreshTokenRequest {
+impl<'a> RefreshTokenRequest<'a> {
     /// Creates a new RefreshTokenRequest with the necessary parameters:
-    pub fn new(config: &Config, refresh_token: &RefreshToken) -> Self {
+    pub fn new(config: &'a Config, refresh_token: &'a RefreshToken) -> Self {
         Self {
-            refresh_token_endpoint: "https://oauth2.googleapis.com/token".to_string(),
-            client_id: config.client_id.to_owned(),
-            client_secret: config.client_secret.to_owned(),
-            refresh_token: refresh_token.to_owned(),
-            grant_type: "refresh_token".to_string(),
+            refresh_token_endpoint: "https://oauth2.googleapis.com/token",
+            client_id: config.client_id(),
+            client_secret: config.client_secret(),
+            refresh_token,
+            grant_type: "refresh_token",
         }
+    }
+
+    pub fn refresh_token_endpoint(&self) -> &str {
+        self.refresh_token_endpoint
+    }
+
+    pub fn client_id(&self) -> &ClientID {
+        self.client_id
+    }
+
+    pub fn client_secret(&self) -> &ClientSecret {
+        self.client_secret
+    }
+
+    pub fn refresh_token(&self) -> &RefreshToken {
+        self.refresh_token
+    }
+
+    pub fn grant_type(&self) -> &str {
+        self.grant_type
     }
 }
 
@@ -82,7 +102,6 @@ impl RefreshTokenResponse {
     }
 }
 
-// ==========Tests==========
 #[cfg(test)]
 mod tests {
     use crate::{config::ConfigBuilder, id_token::AccessToken, refresh_token::RefreshToken};
@@ -116,13 +135,13 @@ mod tests {
         let refresh_token = RefreshToken("my_refresh_token".to_string());
 
         let req = RefreshTokenRequest::new(&config, &refresh_token);
-        assert_eq!(req.client_id, config.client_id);
+        assert_eq!(req.client_id.0, config.client_id.0);
         assert_eq!(
             req.refresh_token_endpoint,
             "https://oauth2.googleapis.com/token"
         );
-        assert_eq!(req.client_secret, config.client_secret);
-        assert_eq!(req.refresh_token, refresh_token);
+        assert_eq!(req.client_secret.0, config.client_secret.0);
+        assert_eq!(req.refresh_token.0, refresh_token.0);
         assert_eq!(req.grant_type, "refresh_token");
     }
 
