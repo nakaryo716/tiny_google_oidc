@@ -135,7 +135,7 @@ pub struct RefreshTokenExe;
 /// 1. Prepare the request parameters.
 /// 2. Send an HTTP POST request to Google's token endpoint.
 /// 3. Parse and return the new RefreshTokenResponse.
-impl<'a> Executer<'a, RefreshTokenRequest> for RefreshTokenExe {
+impl<'a> Executer<'a, RefreshTokenRequest<'_>> for RefreshTokenExe {
     type Response = RefreshTokenResponse;
     type Error = ExecuteError;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'a>>;
@@ -143,14 +143,14 @@ impl<'a> Executer<'a, RefreshTokenRequest> for RefreshTokenExe {
     fn execute(&'a self, req: &'a RefreshTokenRequest) -> Self::Future {
         Box::pin(async move {
             let mut param = HashMap::new();
-            param.insert("client_id", &req.client_id.0);
-            param.insert("client_secret", &req.client_secret.0);
-            param.insert("refresh_token", &req.refresh_token.0);
-            param.insert("grant_type", &req.grant_type);
+            param.insert("client_id", req.client_id().value());
+            param.insert("client_secret", req.client_id().value());
+            param.insert("refresh_token", req.refresh_token().value_as_str());
+            param.insert("grant_type", req.grant_type());
 
             let client = Client::new();
             let res = client
-                .post(&req.refresh_token_endpoint)
+                .post(req.refresh_token_endpoint())
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .form(&param)
                 .send()
