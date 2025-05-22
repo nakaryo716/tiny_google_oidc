@@ -34,27 +34,48 @@ impl RevokeToken {
     pub fn new_refresh_token(token: &str) -> Self {
         Self::RefreshToken(RefreshToken(token.to_string()))
     }
+
+    pub fn access_token(&self) -> Option<&AccessToken> {
+        if let RevokeToken::AccessToken(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    pub fn refresh_token(&self) -> Option<&RefreshToken> {
+        if let RevokeToken::RefreshToken(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
 }
 
 /// Represents a request to revoke a token by sending it to Google's revocation endpoint.
 #[derive(Debug, Clone, PartialEq)]
-pub struct RevokeTokenRequest {
-    pub(crate) end_point: String,
-    pub(crate) token: RevokeToken,
+pub struct RevokeTokenRequest<'a> {
+    pub(crate) end_point: &'a str,
+    pub(crate) token: &'a RevokeToken,
 }
 
-impl RevokeTokenRequest {
+impl<'a> RevokeTokenRequest<'a> {
     /// Creates a new RevokeTokenRequest with the token to be revoked and the Google revocation endpoint (<https://oauth2.googleapis.com/revoke>).
-    pub fn new(token: &RevokeToken) -> Self {
+    pub fn new(token: &'a RevokeToken) -> Self {
         Self {
-            end_point: "https://oauth2.googleapis.com/revoke".to_string(),
-            token: token.clone(),
+            end_point: "https://oauth2.googleapis.com/revoke",
+            token: token,
         }
     }
     /// Returns the revocation endpoint URL.
     pub fn end_point(&self) -> &str {
-        &self.end_point
+        self.end_point
     }
+
+    pub fn token(&self ) -> &RevokeToken {
+        self.token
+    }
+
     /// Extracts the token string from the RevokeToken enum, whether it's an access token or a refresh token.
     pub fn inner_value(&self) -> &str {
         match &self.token {
@@ -62,9 +83,9 @@ impl RevokeTokenRequest {
             RevokeToken::RefreshToken(v) => &v.0,
         }
     }
+
 }
 
-// ==========Tests==========
 #[cfg(test)]
 mod tests {
     use crate::id_token::AccessToken;
@@ -75,7 +96,7 @@ mod tests {
     fn test_revoke_req_new() {
         let token = RevokeToken::AccessToken(AccessToken("my_access_token".to_string()));
         let req = RevokeTokenRequest::new(&token);
-        assert_eq!(req.token, token)
+        assert_eq!(req.token(), &token)
     }
 
     #[test]
@@ -83,6 +104,6 @@ mod tests {
         let token = AccessToken("my_access_token".to_string());
         let access_token = RevokeToken::AccessToken(token.clone());
         let req = RevokeTokenRequest::new(&access_token);
-        assert_eq!(req.token, access_token);
+        assert_eq!(req.token(), &access_token);
     }
 }

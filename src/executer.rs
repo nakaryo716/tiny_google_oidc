@@ -100,14 +100,14 @@ pub struct RevokeTokenExe;
 /// 1. Prepare the revocation endpoint URL.
 /// 2. Send the token to be revoked.
 /// 3. Return the HTTP status code indicating success or failure.
-impl<'a> Executer<'a, RevokeTokenRequest> for RevokeTokenExe {
+impl<'a> Executer<'a, RevokeTokenRequest<'_>> for RevokeTokenExe {
     type Response = StatusCode;
     type Error = ExecuteError;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'a>>;
 
     fn execute(&'a self, req: &'a RevokeTokenRequest) -> Self::Future {
         Box::pin(async move {
-            let url = &req.end_point;
+            let url = req.end_point;
 
             let mut param = HashMap::new();
             param.insert("token", req.inner_value());
