@@ -72,7 +72,7 @@ impl<'a> RevokeTokenRequest<'a> {
         self.end_point
     }
 
-    pub fn token(&self ) -> &RevokeToken {
+    pub fn token(&self) -> &RevokeToken {
         self.token
     }
 
@@ -83,7 +83,6 @@ impl<'a> RevokeTokenRequest<'a> {
             RevokeToken::RefreshToken(v) => &v.0,
         }
     }
-
 }
 
 #[cfg(test)]
