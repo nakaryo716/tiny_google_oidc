@@ -16,7 +16,7 @@
 //!     - Revoking an access token only terminates the current session, while revoking a refresh token invalidates all associated access tokens.
 //! - Ensure token safety
 //!     - Revocation should be performed securely (e.g., through a backend server) to prevent malicious attacks.
-use crate::{id_token::AccessToken, refresh_token::RefreshToken};
+use crate::{error::Error, id_token::AccessToken, refresh_token::RefreshToken};
 
 /// Represents a token that can be revoked, which can be either an access token or a refresh token.
 #[derive(Debug, Clone, PartialEq)]
@@ -82,6 +82,40 @@ impl<'a> RevokeTokenRequest<'a> {
             RevokeToken::AccessToken(v) => &v.0,
             RevokeToken::RefreshToken(v) => &v.0,
         }
+    }
+}
+
+///  A function that sends an HTTP request to revoke a token (such as an access token or refresh token) using the OAuth2 standard revocation endpoint.  
+/// 
+/// It takes a `RevokeTokenRequest` struct as input and returns `Ok(())` on success, or an `Error` if the revocation fails.  
+/// The implementation uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
+pub async fn send_revoke_token_req(req: &RevokeTokenRequest<'_>) -> Result<(), Error> {
+    use reqwest::Client;
+    use std::collections::HashMap;
+    use tracing::error;
+
+    let end_point = req.end_point();
+
+    let mut param = HashMap::new();
+    param.insert("token", req.inner_value());
+
+    let client = Client::new();
+    let status_code = client
+        .post(end_point)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .form(&param)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to end request: {:?}", e);
+            Error::Send
+        })?
+        .status();
+
+    if status_code.is_success() {
+        Ok(())
+    } else {
+        Err(Error::Send)
     }
 }
 

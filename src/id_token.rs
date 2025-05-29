@@ -177,6 +177,44 @@ impl AccessToken {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct IDTokenRow(String);
 
+/// A function that sends an HTTP request to Google's authentication server to obtain an IDToken.  
+/// 
+/// It takes an `IDTokenRequest` struct as input and returns an `IDTokenResponse` on success.  
+/// The implementation uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
+pub async fn send_id_token_req(req: &IDTokenRequest<'_>) -> Result<IDTokenResponse, Error> {
+    use reqwest::Client;
+    use std::collections::HashMap;
+    use url::Url;
+
+    let url = Url::parse(req.token_endpoint().value()).map_err(|e| {
+        error!("Failed to parse url: {:?}", e);
+        Error::URL
+    })?;
+    let mut params = HashMap::new();
+    params.insert("code", req.code().0.as_str());
+    params.insert("client_id", req.client_id().value());
+    params.insert("client_secret", req.client_secret().value());
+    params.insert("redirect_uri", req.redirect_uri().value());
+    params.insert("grant_type", req.grant_type());
+
+    let client = Client::new();
+    let res = client
+        .post(url)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .form(&params)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to send request: {:?}", e);
+            Error::Send
+        })?;
+    let res_json = res.json::<IDTokenResponse>().await.map_err(|e| {
+        error!("Failed to parse JSON: {:?}", e);
+        Error::Json
+    })?;
+    Ok(res_json)
+}
+
 #[cfg(test)]
 mod tests {
     use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};

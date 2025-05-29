@@ -14,4 +14,8 @@ pub enum Error {
     ScopeMismatch,
     #[error("Failed to parse url")]
     URL,
+    #[error("Failed to parse JSON")]
+    Json,
+    #[error("Failed to send data")]
+    Send,
 }
