@@ -86,7 +86,7 @@ impl<'a> RevokeTokenRequest<'a> {
 }
 
 ///  A function that sends an HTTP request to revoke a token (such as an access token or refresh token) using the OAuth2 standard revocation endpoint.  
-/// 
+///
 /// It takes a `RevokeTokenRequest` struct as input and returns `Ok(())` on success, or an `Error` if the revocation fails.  
 /// The implementation uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
 pub async fn send_revoke_token_req(req: &RevokeTokenRequest<'_>) -> Result<(), Error> {

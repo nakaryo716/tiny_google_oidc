@@ -104,7 +104,7 @@ impl RefreshTokenResponse {
 }
 
 /// A function that sends an HTTP request to a token endpoint to obtain a new access token using a refresh token.  
-/// 
+///
 /// It accepts a `RefreshTokenRequest` struct and returns a `RefreshTokenResponse` on success.  
 /// The function uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
 pub async fn send_refresh_token_req(

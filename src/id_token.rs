@@ -22,7 +22,7 @@ use crate::{
 /// An ID token contains user authentication and profile information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IDToken {
-    /// Issuer (e.g., "https://accounts.google.com")
+    /// Issuer (e.g., "<https://accounts.google.com>")
     pub iss: String,
     /// Client ID
     pub aud: String,
@@ -178,7 +178,7 @@ impl AccessToken {
 pub struct IDTokenRow(String);
 
 /// A function that sends an HTTP request to Google's authentication server to obtain an IDToken.  
-/// 
+///
 /// It takes an `IDTokenRequest` struct as input and returns an `IDTokenResponse` on success.  
 /// The implementation uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
 pub async fn send_id_token_req(req: &IDTokenRequest<'_>) -> Result<IDTokenResponse, Error> {
