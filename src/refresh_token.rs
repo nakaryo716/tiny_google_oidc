@@ -131,7 +131,11 @@ pub async fn send_refresh_token_req(
             error!("Failed to send request: {:?}", e);
             Error::Send
         })?;
-    println!("!!!!{:?}", res);
+
+    if !res.status().is_success() {
+        return Err(Error::SendStatus(res.status()));
+    }
+
     let res_json = res.json::<RefreshTokenResponse>().await.map_err(|e| {
         error!("Failed to parse JSON: {:?}", e);
         Error::Json

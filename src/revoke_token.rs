@@ -115,7 +115,7 @@ pub async fn send_revoke_token_req(req: &RevokeTokenRequest<'_>) -> Result<(), E
     if status_code.is_success() {
         Ok(())
     } else {
-        Err(Error::Send)
+        Err(Error::SendStatus(status_code))
     }
 }
 

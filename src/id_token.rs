@@ -208,6 +208,11 @@ pub async fn send_id_token_req(req: &IDTokenRequest<'_>) -> Result<IDTokenRespon
             error!("Failed to send request: {:?}", e);
             Error::Send
         })?;
+
+    if !res.status().is_success() {
+        return Err(Error::SendStatus(res.status()));
+    }
+
     let res_json = res.json::<IDTokenResponse>().await.map_err(|e| {
         error!("Failed to parse JSON: {:?}", e);
         Error::Json
