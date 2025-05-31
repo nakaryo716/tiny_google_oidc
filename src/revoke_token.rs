@@ -64,7 +64,7 @@ impl<'a> RevokeTokenRequest<'a> {
     pub fn new(token: &'a RevokeToken) -> Self {
         Self {
             end_point: "https://oauth2.googleapis.com/revoke",
-            token: token,
+            token,
         }
     }
     /// Returns the revocation endpoint URL.
