@@ -1,3 +1,4 @@
+use http::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
@@ -14,4 +15,10 @@ pub enum Error {
     ScopeMismatch,
     #[error("Failed to parse url")]
     URL,
+    #[error("Failed to parse JSON")]
+    Json,
+    #[error("Failed to send data")]
+    Send,
+    #[error("Send request but failed")]
+    SendStatus(StatusCode),
 }

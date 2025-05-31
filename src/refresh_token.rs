@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{ClientID, ClientSecret, Config},
+    error::Error,
     id_token::AccessToken,
 };
 
@@ -100,6 +101,46 @@ impl RefreshTokenResponse {
     pub fn token_type(&self) -> &str {
         &self.token_type
     }
+}
+
+/// A function that sends an HTTP request to a token endpoint to obtain a new access token using a refresh token.  
+///
+/// It accepts a `RefreshTokenRequest` struct and returns a `RefreshTokenResponse` on success.  
+/// The function uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
+pub async fn send_refresh_token_req(
+    req: &RefreshTokenRequest<'_>,
+) -> Result<RefreshTokenResponse, Error> {
+    use reqwest::Client;
+    use std::collections::HashMap;
+    use tracing::error;
+
+    let mut param = HashMap::new();
+    param.insert("client_id", req.client_id().value());
+    param.insert("client_secret", req.client_id().value());
+    param.insert("refresh_token", req.refresh_token().value_as_str());
+    param.insert("grant_type", req.grant_type());
+
+    let client = Client::new();
+    let res = client
+        .post(req.refresh_token_endpoint())
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .form(&param)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to send request: {:?}", e);
+            Error::Send
+        })?;
+
+    if !res.status().is_success() {
+        return Err(Error::SendStatus(res.status()));
+    }
+
+    let res_json = res.json::<RefreshTokenResponse>().await.map_err(|e| {
+        error!("Failed to parse JSON: {:?}", e);
+        Error::Json
+    })?;
+    Ok(res_json)
 }
 
 #[cfg(test)]

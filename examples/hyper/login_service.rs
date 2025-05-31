@@ -13,8 +13,7 @@ use tiny_google_oidc::{
     code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
     config::Config,
     csrf_token::CSRFToken,
-    executer::{Executer, IDTokenExe},
-    id_token::{IDToken, IDTokenRequest},
+    id_token::{IDToken, IDTokenRequest, send_id_token_req},
     nonce::Nonce,
 };
 use uuid::Uuid;
@@ -120,9 +119,7 @@ impl LoginService {
 
         // Send an HTTP Request to Google to get an IDToken
         // Use the code (CSRFToken has been verified by exchange_with_code)
-        let id_token_res = IDTokenExe
-            .execute(&IDTokenRequest::new(&self.config, code))
-            .await?;
+        let id_token_res = send_id_token_req(&IDTokenRequest::new(&self.config, code)).await?;
 
         // It is also possible to obtain an AccessToken or RefreshToken.
         // This needs to be stored in a secure database.

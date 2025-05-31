@@ -24,7 +24,6 @@ pub mod code;
 pub mod config;
 pub mod csrf_token;
 pub mod error;
-pub mod executer;
 pub mod id_token;
 pub mod nonce;
 pub mod refresh_token;
