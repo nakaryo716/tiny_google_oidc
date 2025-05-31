@@ -17,6 +17,7 @@
 //! - It does **not** validate the `id_token` when converting it to a JWT. As a result, the `id_token`
 //!   should not be passed to other components of your application.
 //! - For more details, refer to the
+//!
 //! [Google OpenID Connect documentation](https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo).
 //! # Examples
 //! For example usage, see the [examples directory](https://github.com/nakaryo716/tiny_google_oidc.git).
@@ -24,7 +25,6 @@ pub mod code;
 pub mod config;
 pub mod csrf_token;
 pub mod error;
-pub mod executer;
 pub mod id_token;
 pub mod nonce;
 pub mod refresh_token;

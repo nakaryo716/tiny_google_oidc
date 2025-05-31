@@ -31,11 +31,10 @@ use tiny_google_oidc::{
     code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
     config::{Config, ConfigBuilder},
     csrf_token::CSRFToken,
-    executer::{Executer, IDTokenExe, RefreshTokenExe, RevokeTokenExe},
-    id_token::{IDToken, IDTokenRequest},
+    id_token::{IDToken, IDTokenRequest, send_id_token_req},
     nonce::Nonce,
-    refresh_token::{RefreshToken, RefreshTokenRequest},
-    revoke_token::{RevokeToken, RevokeTokenRequest},
+    refresh_token::{RefreshToken, RefreshTokenRequest, send_refresh_token_req},
+    revoke_token::{RevokeToken, RevokeTokenRequest, send_revoke_token_req},
 };
 use tracing::error;
 use uuid::Uuid;
@@ -56,11 +55,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Build Config
     let config = ConfigBuilder::new()
-        .auth_endpoint(&auth_endpoint)
-        .client_id(&client_id)
-        .client_secret(&client_secret)
-        .token_endpoint(&token_endpoint)
-        .redirect_uri(&redirect_uri)
+        .auth_endpoint(auth_endpoint)
+        .client_id(client_id)
+        .client_secret(client_secret)
+        .token_endpoint(token_endpoint)
+        .redirect_uri(redirect_uri)
         .build();
 
     // application state that hold Config
@@ -106,6 +105,8 @@ async fn start_auth(
     // Generate Nonce
     let nonce = Nonce::new();
     let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
+    // if You'd like to set none, you need type annotation like this.
+    // let scope: Option<std::iter::Empty<AdditionalScope>> = None;
 
     // Construct CodeRequest from config, scope, csrf_token, nonce
     let req = CodeRequest::new(
@@ -117,9 +118,9 @@ async fn start_auth(
     );
     // Convert as URL
     let url = req
-        .into_url()
+        .try_into_url()
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok((jar.add(cookie), Redirect::to(&url)))
+    Ok((jar.add(cookie), Redirect::to(&url.to_string())))
 }
 
 async fn call_back(
@@ -171,8 +172,7 @@ async fn call_back(
     let id_token_req = IDTokenRequest::new(&app_state.config, code);
 
     // Fetch to google for get IDToken
-    let res = IDTokenExe
-        .execute(&id_token_req)
+    let res = send_id_token_req(&id_token_req)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     println!("{:#?}", res);
@@ -181,18 +181,17 @@ async fn call_back(
     // Get IDToken that Base64URL encoded
     let id_token_row = res.id_token();
     // Decode and Get IDToken that deserialized
-    let id_token = IDToken::decode_from_row(&id_token_row).unwrap();
+    let id_token = IDToken::from_id_token_row(id_token_row).unwrap();
     Ok((StatusCode::OK, Json(id_token)))
 }
 
 async fn revoke_token(Json(refresh_token): Json<Token>) -> Result<impl IntoResponse, StatusCode> {
     let token = RevokeToken::new_access_token(&refresh_token.token);
     let req = RevokeTokenRequest::new(&token);
-    let res = RevokeTokenExe
-        .execute(&req)
+    send_revoke_token_req(&req)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(res)
+    Ok(StatusCode::OK)
 }
 
 // Refresh token handler
@@ -205,8 +204,7 @@ async fn refresh_token(
     // Recommend get refresh_token from secure database in production code
     let refresh_token = RefreshToken::new(&refresh_token.token);
     let req = RefreshTokenRequest::new(&app_state.config, &refresh_token);
-    let res = RefreshTokenExe
-        .execute(&req)
+    let res = send_refresh_token_req(&req)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok((StatusCode::OK, Json(res)))
@@ -219,14 +217,14 @@ fn read_env(key: &str) -> anyhow::Result<String> {
 
 #[derive(Debug, Clone)]
 struct AppState {
-    config: Config,
+    config: Arc<Config>,
     token: Arc<Mutex<HashMap<String, CSRFToken>>>,
 }
 
 impl AppState {
     fn new(config: Config) -> Self {
         Self {
-            config,
+            config: Arc::new(config),
             token: Arc::default(),
         }
     }

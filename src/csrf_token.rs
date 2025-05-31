@@ -9,9 +9,8 @@ use crate::error::Error;
 ///
 /// This token is used to prevent CSRF attacks by verifying that the request originates from the client.
 /// # Example
-/// ```rust, no_run
-/// use your_crate::csrf_token::CSRFToken;
-///
+/// ```rust,
+/// use tiny_google_oidc::csrf_token::CSRFToken;
 /// let csrf_token = CSRFToken::new().expect("Failed to generate CSRF token");
 /// println!("Generated CSRF Token: {}", csrf_token.value());
 /// ```
@@ -24,7 +23,8 @@ impl CSRFToken {
     /// - Encodes the random bytes in Base64URL format.
     /// - Returns an `Error::GenToken` if the random generation fails.
     /// # Example
-    /// ```rust,no_run
+    /// ```rust,
+    /// use tiny_google_oidc::csrf_token::CSRFToken;
     /// let token = CSRFToken::new().expect("Failed to generate CSRF token");
     /// ```
     pub fn new() -> Result<Self, Error> {
@@ -47,13 +47,6 @@ impl CSRFToken {
 #[derive(Debug, Clone)]
 pub struct UnCheckedCSRFToken(pub(crate) String);
 
-impl From<String> for UnCheckedCSRFToken {
-    fn from(value: String) -> Self {
-        Self(value.to_string())
-    }
-}
-
-// ==========Tests==========
 #[cfg(test)]
 mod tests {
     use super::CSRFToken;

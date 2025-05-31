@@ -13,8 +13,7 @@ use tiny_google_oidc::{
     code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
     config::Config,
     csrf_token::CSRFToken,
-    executer::{Executer, IDTokenExe},
-    id_token::{IDToken, IDTokenRequest},
+    id_token::{IDToken, IDTokenRequest, send_id_token_req},
     nonce::Nonce,
 };
 use uuid::Uuid;
@@ -66,11 +65,11 @@ impl LoginService {
             &csrf_token,
             &Nonce::new(),
         )
-        .into_url()?;
+        .try_into_url()?;
 
         let res = Response::builder()
             .status(StatusCode::SEE_OTHER)
-            .header(LOCATION, url)
+            .header(LOCATION, url.to_string())
             .header(SET_COOKIE, cookie.to_string())
             .body(Empty::new().map_err(|e| match e {}).boxed())
             .unwrap();
@@ -120,9 +119,7 @@ impl LoginService {
 
         // Send an HTTP Request to Google to get an IDToken
         // Use the code (CSRFToken has been verified by exchange_with_code)
-        let id_token_res = IDTokenExe
-            .execute(&IDTokenRequest::new(&self.config, code))
-            .await?;
+        let id_token_res = send_id_token_req(&IDTokenRequest::new(&self.config, code)).await?;
 
         // It is also possible to obtain an AccessToken or RefreshToken.
         // This needs to be stored in a secure database.
@@ -130,7 +127,7 @@ impl LoginService {
         let _refresh_token = id_token_res.refresh_token();
 
         // Get IDToken(Decode)
-        let id_token = IDToken::decode_from_row(id_token_res.id_token())?;
+        let id_token = IDToken::from_id_token_row(id_token_res.id_token())?;
 
         // Create SessionID
         let session_id = Uuid::new_v4().to_string();

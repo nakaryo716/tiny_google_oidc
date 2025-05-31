@@ -18,49 +18,49 @@ use crate::{
     nonce::Nonce,
     refresh_token::RefreshToken,
 };
-
-/// Represents an OAuth 2.0 access token.  
-/// This token is used to access Google APIs.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct AccessToken(pub(crate) String);
-
-impl AccessToken {
-    /// Retrieves the access token as a string.
-    pub fn value(&self) -> String {
-        self.0.clone()
-    }
-}
-
 /// Represents a decoded ID token payload in OpenID Connect.  
 /// An ID token contains user authentication and profile information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IDToken {
-    pub iss: String,                  // Issuer (e.g., "https://accounts.google.com")
-    pub aud: String,                  // Client ID
-    pub sub: String,                  // User ID (Unique identifier for Google accounts)
-    pub azp: Option<String>,          // Authorized party (Optional)
-    pub email: Option<String>,        // User's email address
-    pub email_verified: Option<bool>, // Whether the email is verified
-    pub given_name: Option<String>,   // Given name
-    pub family_name: Option<String>,  // Family name
-    pub name: Option<String>,         // Full name
-    pub picture: Option<String>,      // Profile picture URL
-    pub at_hash: Option<String>,      // Access token hash
-    pub iat: u32,                     // Issued-at timestamp (UNIX time)
-    pub exp: u32,                     // Expiration timestamp (UNIX time)
-    pub nonce: Option<Nonce>,         // Nonce for security validation
+    /// Issuer (e.g., "<https://accounts.google.com>")
+    pub iss: String,
+    /// Client ID
+    pub aud: String,
+    /// User ID (Unique identifier for Google accounts)
+    pub sub: String,
+    /// Authorized party (Optional)
+    pub azp: Option<String>,
+    /// User's email address
+    pub email: Option<String>,
+    /// Whether the email is verified
+    pub email_verified: Option<bool>,
+    /// Given name
+    pub given_name: Option<String>,
+    /// Family name
+    pub family_name: Option<String>,
+    /// Full name
+    pub name: Option<String>,
+    /// Profile picture URL
+    pub picture: Option<String>,
+    /// Access token hash
+    pub at_hash: Option<String>,
+    /// Issued-at timestamp (UNIX time)
+    pub iat: u32,
+    /// Expiration timestamp (UNIX time)
+    pub exp: u32,
+    /// Nonce for security validation
+    pub nonce: Option<Nonce>,
 }
 
 impl IDToken {
+    /// Construct IDToken from [`IDTokenRow`] .   
     /// Decodes an IDTokenRow (encoded ID token) into an IDToken.
-    pub fn decode_from_row(id_token: &IDTokenRow) -> Result<Self, Error> {
+    pub fn from_id_token_row(id_token: &IDTokenRow) -> Result<Self, Error> {
         let split: Vec<_> = id_token.0.split(".").collect();
         if split.len() != 3 {
             return Err(Error::Decode);
         }
-        // Caution!!!!
-        // id_token is cloned here for decode.
-        // However the cost of clone is big.
+
         let bytes = BASE64_URL_SAFE_NO_PAD.decode(split[1]).map_err(|e| {
             error!("Failed to decode IDToken: {}", e);
             Error::Decode
@@ -77,49 +77,50 @@ impl IDToken {
 
 /// A structure used to send an ID token request to Google's token endpoint.
 #[derive(Debug, Clone)]
-pub struct IDTokenRequest {
-    token_endpoint: TokenEndPoint,
+pub struct IDTokenRequest<'a> {
+    token_endpoint: &'a TokenEndPoint,
     code: Code,
-    client_id: ClientID,
-    client_secret: ClientSecret,
-    redirect_uri: RedirectURI,
-    grant_type: String,
+    client_id: &'a ClientID,
+    client_secret: &'a ClientSecret,
+    redirect_uri: &'a RedirectURI,
+    grant_type: &'a str,
 }
 
-impl IDTokenRequest {
-    /// Creates a new request using parameters from Config.
-    pub fn new(config: &Config, code: Code) -> Self {
+impl<'a> IDTokenRequest<'a> {
+    /// Creates a new request using parameters from Config and Code.
+    pub fn new(config: &'a Config, code: Code) -> Self {
         Self {
-            token_endpoint: config.token_endpoint.to_owned(),
+            token_endpoint: config.token_endpoint(),
             code,
-            client_id: config.client_id.to_owned(),
-            client_secret: config.client_secret.to_owned(),
-            redirect_uri: config.redirect_uri.to_owned(),
-            grant_type: "authorization_code".to_string(),
+            client_id: config.client_id(),
+            client_secret: config.client_secret(),
+            redirect_uri: config.redirect_uri(),
+            grant_type: "authorization_code",
         }
     }
 
-    pub fn token_endpoint(&self) -> &str {
-        &self.token_endpoint.0
+    pub fn token_endpoint(&self) -> &TokenEndPoint {
+        self.token_endpoint
     }
 
-    pub fn code(&self) -> &str {
-        &self.code.0
+    pub fn code(&self) -> &Code {
+        &self.code
     }
 
-    pub fn client_id(&self) -> &str {
-        &self.client_id.0
+    pub fn client_id(&self) -> &ClientID {
+        self.client_id
     }
 
-    pub fn client_secret(&self) -> &str {
-        &self.client_secret.0
+    pub fn client_secret(&self) -> &ClientSecret {
+        self.client_secret
     }
-    pub fn redirect_uri(&self) -> &str {
-        &self.redirect_uri.0
+
+    pub fn redirect_uri(&self) -> &RedirectURI {
+        self.redirect_uri
     }
 
     pub fn grant_type(&self) -> &str {
-        &self.grant_type
+        self.grant_type
     }
 }
 
@@ -160,11 +161,65 @@ impl IDTokenResponse {
     }
 }
 
+/// Represents an OAuth 2.0 access token.  
+/// This token is used to access Google APIs.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AccessToken(pub(crate) String);
+
+impl AccessToken {
+    /// Retrieves the access token as a string.
+    pub fn value(&self) -> String {
+        self.0.clone()
+    }
+}
+
 /// Represents an encoded ID token, which must be decoded before use.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct IDTokenRow(String);
 
-// ==========Tests==========
+/// A function that sends an HTTP request to Google's authentication server to obtain an IDToken.  
+///
+/// It takes an `IDTokenRequest` struct as input and returns an `IDTokenResponse` on success.  
+/// The implementation uses the [reqwest](https://docs.rs/reqwest/) crate internally for HTTP communication.
+pub async fn send_id_token_req(req: &IDTokenRequest<'_>) -> Result<IDTokenResponse, Error> {
+    use reqwest::Client;
+    use std::collections::HashMap;
+    use url::Url;
+
+    let url = Url::parse(req.token_endpoint().value()).map_err(|e| {
+        error!("Failed to parse url: {:?}", e);
+        Error::URL
+    })?;
+    let mut params = HashMap::new();
+    params.insert("code", req.code().0.as_str());
+    params.insert("client_id", req.client_id().value());
+    params.insert("client_secret", req.client_secret().value());
+    params.insert("redirect_uri", req.redirect_uri().value());
+    params.insert("grant_type", req.grant_type());
+
+    let client = Client::new();
+    let res = client
+        .post(url)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .form(&params)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to send request: {:?}", e);
+            Error::Send
+        })?;
+
+    if !res.status().is_success() {
+        return Err(Error::SendStatus(res.status()));
+    }
+
+    let res_json = res.json::<IDTokenResponse>().await.map_err(|e| {
+        error!("Failed to parse JSON: {:?}", e);
+        Error::Json
+    })?;
+    Ok(res_json)
+}
+
 #[cfg(test)]
 mod tests {
     use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
@@ -208,7 +263,7 @@ mod tests {
         token_row.push_str(".signature");
         let id_token_row = IDTokenRow(token_row);
 
-        let decoded = IDToken::decode_from_row(&id_token_row);
+        let decoded = IDToken::from_id_token_row(&id_token_row);
         assert!(decoded.is_ok());
     }
 
@@ -216,7 +271,7 @@ mod tests {
     fn test_id_token_decode_invalid_base64() {
         let id_token_row = IDTokenRow("invalid_base64".to_string());
 
-        let decoded = IDToken::decode_from_row(&id_token_row);
+        let decoded = IDToken::from_id_token_row(&id_token_row);
         assert!(matches!(decoded, Err(Error::Decode)));
     }
 
@@ -225,7 +280,7 @@ mod tests {
         let invalid_json = BASE64_URL_SAFE_NO_PAD.encode("not a valid json");
         let id_token_row = IDTokenRow(invalid_json);
 
-        let decoded = IDToken::decode_from_row(&id_token_row);
+        let decoded = IDToken::from_id_token_row(&id_token_row);
         assert!(matches!(decoded, Err(Error::Decode)));
     }
 
