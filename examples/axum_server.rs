@@ -105,8 +105,6 @@ async fn start_auth(
     // Generate Nonce
     let nonce = Nonce::new();
     let scope = AdditionalScope::Both;
-    // if You'd like to set none, you need type annotation like this.
-    // let scope: Option<std::iter::Empty<AdditionalScope>> = None;
 
     // Construct CodeRequest from config, scope, csrf_token, nonce
     let req = CodeRequest::new(
