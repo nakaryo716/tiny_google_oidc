@@ -29,7 +29,7 @@
 //!
 //! let csrf_token = CSRFToken::new().unwrap();
 //! let nonce = Nonce::new();
-//! let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+//! let scope = AdditionalScope::Email;
 //!
 //! let request = CodeRequest::new(true, &config, scope, &csrf_token, &nonce);
 //! let url = request.try_into_url().unwrap();
@@ -55,7 +55,6 @@
 //! # Notes
 //! - Always validate the CSRF token to ensure the integrity of the authentication flow.
 //! - Do not use `UnCheckedCodeResponse` directly without verification.
-use itertools::Itertools;
 use tracing::error;
 use url::Url;
 
@@ -65,10 +64,7 @@ use crate::{
     error::Error,
     nonce::Nonce,
 };
-use std::{
-    collections::{HashMap, HashSet},
-    iter::Iterator,
-};
+use std::{collections::HashMap, iter::Iterator};
 
 /// Represents the value of the `code` query parameter sent by Google during the OpenID Connect flow.  
 /// This structure ensures that the `code` can only be obtained after validating the associated `CSRFToken`.
@@ -123,53 +119,47 @@ impl Code {
 ///
 /// let csrf_token = CSRFToken::new().unwrap();
 /// let nonce = Nonce::new();
-/// let scope: Option<std::iter::Empty<AdditionalScope>> = None;
+/// let scope = AdditionalScope::Email;
 ///
 /// let request = CodeRequest::new(AccessType::Online, &config, scope, &csrf_token, &nonce);
 /// let url = request.try_into_url().unwrap();
 /// println!("Auth URL: {}", url);
 /// ```
 #[derive(Debug, Clone)]
-pub struct CodeRequest<'a, S>
-where
-    S: IntoIterator<Item = AdditionalScope>,
-{
+pub struct CodeRequest<'a> {
     auth_endpoint: &'a AuthEndPoint,
     client_id: &'a ClientID,
     response_type: &'a str,
-    scope: Option<S>,
+    scope: AdditionalScope,
     redirect_uri: &'a RedirectURI,
     access_type: AccessType,
     state: &'a CSRFToken,
     nonce: &'a Nonce,
 }
 
-impl<'a, S> CodeRequest<'a, S>
-where
-    S: IntoIterator<Item = AdditionalScope> + Clone,
-{
+impl<'a> CodeRequest<'a> {
     /// # **Parameters**
     ///
-    /// - `access_type` (AccessType):
+    /// - `access_type`:
     ///   - Offline → Requests an **offline** access token (includes a refresh token).
     ///   - Online → Requests an **online** access token (no refresh token).
     ///
-    /// - `config` (`&Config`):
+    /// - `config`:
     ///   - Contains necessary settings such as `client_id`, `auth_endpoint`, and `redirect_uri`.
     ///
-    /// - `scope` (`Option<S>` where `S: Iterator<Item = AdditionalScope>`):
+    /// - `scope`:
     ///   - Specifies additional scopes (`email`, `profile`) in addition to the required `openid` scope.
     ///   - If `None`, only `openid` will be requested.
     ///
-    /// - `state` (`&CSRFToken`):
+    /// - `state`:
     ///   - A **CSRF protection token** to prevent cross-site request forgery attacks.
     ///
-    /// - `nonce` (`&Nonce`):
+    /// - `nonce`:
     ///   - A **nonce value** used to mitigate replay attacks.
     pub fn new(
         access_type: AccessType,
         config: &'a Config,
-        scope: Option<S>,
+        scope: AdditionalScope,
         state: &'a CSRFToken,
         nonce: &'a Nonce,
     ) -> Self {
@@ -192,22 +182,11 @@ where
             AccessType::Offline => "offline",
         };
 
-        let scope = self
-            .scope
-            .as_ref()
-            .map(|s| {
-                s.clone().into_iter().map(|v| match v {
-                    AdditionalScope::Email => "email",
-                    AdditionalScope::Profile => "profile",
-                })
-            })
-            .map(|v| v.collect::<HashSet<_>>().iter().sorted().join(" "));
-
-        let scope = if let Some(mut v) = scope {
-            v.insert_str(0, "openid ");
-            v
-        } else {
-            "openid".to_string()
+        let scope = match self.scope {
+            AdditionalScope::Email => "openid email",
+            AdditionalScope::Profile => "openid profile",
+            AdditionalScope::Both => "openid email profile",
+            AdditionalScope::None => "openid",
         };
 
         let url = format!(
@@ -278,7 +257,7 @@ pub enum AccessType {
 ///
 /// In an OpenID Connect authentication request, the `scope` parameter specifies the type of user information
 /// that should be included in the ID token. By default, the `openid` scope is required for authentication.
-/// This enum allows adding **optional** scopes, such as `email` or `profile`, to the request.
+/// This enum allows adding **optional** scopes, such as `email`, `profile`, or both, to the request.
 ///
 /// # Purpose
 /// `AdditionalScope` is used to extend the default `scope` parameter when creating a `CodeRequest`.
@@ -294,15 +273,17 @@ pub enum AccessType {
 /// - Requests the user's **name, profile picture URL, and other basic profile information**.
 /// - This is useful for displaying user details in the application.
 ///
-/// # Usage
-/// To include `email` or `profile` in the scope, add `AdditionalScope::Email` or `AdditionalScope::Profile`
-/// when creating a `CodeRequest`.
+/// ## Both
+/// This allows you to add both `Email` and `Profile` scopes  
+///
+/// ## None
+/// No additional scopes are added  
 ///
 /// # Example
 /// ```rust,no_run
 /// use crate::code::AdditionalScope;
 ///
-/// let additional_scopes = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+/// let additional_scopes = AdditionalScope::Both;
 /// let request = CodeRequest::new(true, &config, additional_scopes, &csrf_token, &nonce);
 /// let url = request.into_url().unwrap();
 /// println!("Authorization URL: {}", url);
@@ -317,12 +298,12 @@ pub enum AccessType {
 pub enum AdditionalScope {
     Email,
     Profile,
+    Both,
+    None,
 }
 
 #[cfg(test)]
 mod tests {
-    use std::iter::Empty;
-
     use url::Url;
 
     use crate::{code::AccessType, config::ConfigBuilder, csrf_token::CSRFToken, nonce::Nonce};
@@ -347,7 +328,7 @@ mod tests {
             .redirect_uri(redirect_uri)
             .build();
 
-        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+        let scope = AdditionalScope::Both;
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
@@ -360,10 +341,7 @@ mod tests {
         assert_eq!(code_req.redirect_uri.0, redirect_uri);
         assert_eq!(*code_req.state, state);
         assert_eq!(*code_req.nonce, nonce);
-
-        let expected_scope: Vec<AdditionalScope> = scope.unwrap().collect();
-        let actual_scope: Vec<AdditionalScope> = code_req.scope.unwrap().collect();
-        assert_eq!(actual_scope, expected_scope);
+        assert_eq!(code_req.scope, scope);
     }
 
     #[test]
@@ -384,7 +362,7 @@ mod tests {
             .redirect_uri(redirect_uri)
             .build();
 
-        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile].into_iter());
+        let scope = AdditionalScope::Both;
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
@@ -397,10 +375,7 @@ mod tests {
         assert_eq!(code_req.redirect_uri.0, redirect_uri);
         assert_eq!(*code_req.state, state);
         assert_eq!(*code_req.nonce, nonce);
-
-        let expected_scope: Vec<AdditionalScope> = scope.unwrap().collect();
-        let actual_scope: Vec<AdditionalScope> = code_req.scope.unwrap().collect();
-        assert_eq!(actual_scope, expected_scope);
+        assert_eq!(code_req.scope, scope);
     }
 
     #[test]
@@ -421,7 +396,7 @@ mod tests {
             .redirect_uri(redirect_uri)
             .build();
 
-        let scope: Option<Empty<AdditionalScope>> = None;
+        let scope = AdditionalScope::None;
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
@@ -434,7 +409,7 @@ mod tests {
         assert_eq!(code_req.redirect_uri.0, redirect_uri);
         assert_eq!(*code_req.state, state);
         assert_eq!(*code_req.nonce, nonce);
-        assert!(code_req.scope.is_none())
+        assert_eq!(code_req.scope, scope);
     }
 
     #[test]
@@ -455,11 +430,11 @@ mod tests {
             .redirect_uri(redirect_url)
             .build();
 
-        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
+        let scope = AdditionalScope::Both;
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
+        let code_req = CodeRequest::new(access_type, &config, scope, &state, &nonce);
 
         let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
@@ -494,11 +469,11 @@ mod tests {
             .redirect_uri(redirect_url)
             .build();
 
-        let scope = Some([AdditionalScope::Email]);
+        let scope = AdditionalScope::Email;
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
+        let code_req = CodeRequest::new(access_type, &config, scope, &state, &nonce);
 
         let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
@@ -533,58 +508,16 @@ mod tests {
             .redirect_uri(redirect_url)
             .build();
 
-        let scope: Option<Empty<AdditionalScope>> = None;
+        let scope = AdditionalScope::None;
         let state = CSRFToken::new().unwrap();
         let nonce = Nonce::new();
 
-        let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
+        let code_req = CodeRequest::new(access_type, &config, scope, &state, &nonce);
 
         let url = code_req.try_into_url().unwrap();
         let expected_url = format!(
             "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
             auth_endpoint, "code", client_id, "openid", "online", redirect_url, state.0, nonce.0,
-        );
-        assert_eq!(url, Url::parse(&expected_url).unwrap());
-    }
-
-    #[test]
-    fn test_code_req_into_url_scope_duplicate() {
-        let access_type = AccessType::Online;
-
-        let auth_endpoint = "https://auth.example.com/auth";
-        let client_id = "my_client_id";
-        let client_secret = "my_secret";
-        let token_endpoint = "https://token.example.com";
-        let redirect_url = "https://redirect.example.com";
-
-        let config = ConfigBuilder::new()
-            .auth_endpoint(auth_endpoint)
-            .client_id(client_id)
-            .client_secret(client_secret)
-            .token_endpoint(token_endpoint)
-            .redirect_uri(redirect_url)
-            .build();
-
-        let scope = Some([
-            AdditionalScope::Email,
-            AdditionalScope::Profile,
-            AdditionalScope::Email,
-        ]);
-        let state = CSRFToken::new().unwrap();
-        let nonce = Nonce::new();
-
-        let code_req = CodeRequest::new(access_type, &config, scope.clone(), &state, &nonce);
-        let url = code_req.try_into_url().unwrap();
-        let expected_url = format!(
-            "{}?response_type={}&client_id={}&scope={}&access_type={}&redirect_uri={}&state={}&nonce={}",
-            auth_endpoint,
-            "code",
-            client_id,
-            "openid email profile",
-            "online",
-            redirect_url,
-            state.0,
-            nonce.0,
         );
         assert_eq!(url, Url::parse(&expected_url).unwrap());
     }

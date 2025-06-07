@@ -48,7 +48,7 @@ impl LoginService {
 
         // Specify the OpenId Connect scope
         // Specify that the email and username should be included in the ID token
-        let scope = Some([AdditionalScope::Email, AdditionalScope::Profile]);
+        let scope = AdditionalScope::Both;
 
         // Store CSRF token in Redis
         let _ = cmd("SET")
