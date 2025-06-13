@@ -4,7 +4,7 @@ use bytes::Bytes;
 use cookie::{Cookie, CookieBuilder, SameSite};
 use http::{
     HeaderValue, Request, Response, StatusCode,
-    header::{COOKIE, HOST, LOCATION, SET_COOKIE},
+    header::{COOKIE, LOCATION, SET_COOKIE},
 };
 use http_body_util::{BodyExt, Empty, combinators::BoxBody};
 use hyper::body::Incoming;
@@ -97,22 +97,8 @@ impl LoginService {
             .query_async::<String>(&mut self.redis_conn)
             .await?;
 
-        // Create Full path URL
-        let host = req
-            .headers()
-            .get(HOST)
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("localhost");
-        let path = req
-            .uri()
-            .path_and_query()
-            .map(|pq| pq.as_str())
-            .unwrap_or("/");
-        let scheme = "http";
-        let url = format!("{}://{}{}", scheme, host, path);
-
         // Create UncheckedCodeResponse from url
-        let code_res = UnCheckedCodeResponse::from_url(&url)?;
+        let code_res = UnCheckedCodeResponse::from_url(&req)?;
         // Consume the response and get the code
         // Verify that the CSRFToken matches (Error if they do not match)
         let code = code_res.exchange_with_code(&csrf_token)?;
