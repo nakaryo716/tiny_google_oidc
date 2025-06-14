@@ -38,7 +38,7 @@
 //!
 //! ## Handling the Callback and Verifying the Authorization Code
 //! ```rust,no_run
-//! let response = UnCheckedCodeResponse::from_url("https://example.com/callback?...").unwrap();
+//! let response = UnCheckedCodeResponse::from_url(req).unwrap();
 //! // get stored CSRF token From DB(Redis, in memory ...)
 //! let csrf_token = store.get("csrf_token_key")?;
 //!
@@ -55,7 +55,6 @@
 //! # Notes
 //! - Always validate the CSRF token to ensure the integrity of the authentication flow.
 //! - Do not use `UnCheckedCodeResponse` directly without verification.
-use tracing::error;
 use url::Url;
 
 use crate::{
@@ -209,7 +208,7 @@ impl<'a> CodeRequest<'a> {
 /// Must be validated using a CSRF token before use.
 /// # Example
 /// ```rust,no_run
-/// let response = UnCheckedCodeResponse::from_url("https://example.com/callback?...").unwrap();
+/// let response = UnCheckedCodeResponse::from_url(req).unwrap();
 /// let csrf_token = store.get("csrf_token_key")?;
 ///
 /// let code = response.exchange_with_code(csrf_token).expect("CSRF token mismatch!");
@@ -221,15 +220,20 @@ pub struct UnCheckedCodeResponse {
 }
 
 impl UnCheckedCodeResponse {
-    pub fn from_url(response_url: &str) -> Result<Self, Error> {
-        let url = url::Url::try_from(response_url).map_err(|e| {
-            error!("Failed to parse url from google: {}", e);
-            Error::URL
-        })?;
-        let params: HashMap<_, _> = url.query_pairs().map(|v| (v.0, v.1)).collect();
+    pub fn from_url<Q>(query_src: Q) -> Result<Self, Error>
+    where
+        Q: QueryExtractor,
+    {
+        let query_str = query_src.extract_query().ok_or(Error::ParamsNotFound)?;
+        let params: HashMap<_, _> = url::form_urlencoded::parse(query_str.as_bytes()).collect();
         Ok(Self {
-            state: UnCheckedCSRFToken(params.get("state").ok_or(Error::URL)?.to_string()),
-            code: Code(params.get("code").ok_or(Error::URL)?.to_string()),
+            state: UnCheckedCSRFToken(
+                params
+                    .get("state")
+                    .ok_or(Error::ParamsNotFound)?
+                    .to_string(),
+            ),
+            code: Code(params.get("code").ok_or(Error::ParamsNotFound)?.to_string()),
         })
     }
 
@@ -240,6 +244,32 @@ impl UnCheckedCodeResponse {
         } else {
             Err(Error::CSRFNotMatch)
         }
+    }
+}
+
+/// Trait that extracts query parameters from URL.  
+///
+/// The ```QueryExtractor``` extracts only the query portion of given a URL.  
+///
+/// For example, given the flollowing URL:   
+/// ```https://example.com/path/to/auth?state=mystate&code=mycode```,  
+/// it would return:  
+///  ```state=mystate&code=mycode```  
+///
+/// The ```query_str``` can remain **URL-encoded**
+pub trait QueryExtractor {
+    fn extract_query(&self) -> Option<&str>;
+}
+
+impl<T> QueryExtractor for http::Request<T> {
+    fn extract_query(&self) -> Option<&str> {
+        self.uri().query()
+    }
+}
+
+impl<T: QueryExtractor + ?Sized> QueryExtractor for &T {
+    fn extract_query(&self) -> Option<&str> {
+        (*self).extract_query()
     }
 }
 
@@ -308,7 +338,7 @@ mod tests {
 
     use crate::{code::AccessType, config::ConfigBuilder, csrf_token::CSRFToken, nonce::Nonce};
 
-    use super::{AdditionalScope, CodeRequest};
+    use super::{AdditionalScope, CodeRequest, UnCheckedCodeResponse};
 
     #[test]
     fn test_code_req_offline() {
@@ -520,5 +550,30 @@ mod tests {
             auth_endpoint, "code", client_id, "openid", "online", redirect_url, state.0, nonce.0,
         );
         assert_eq!(url, Url::parse(&expected_url).unwrap());
+    }
+
+    #[test]
+    fn test_construct_uncheck_code_res() {
+        let code = "mycode";
+        let state = "mystate";
+        let uri = format!("https://www.example.com/autu?code={}&state={}", code, state);
+        let http_req = http::Request::builder().uri(uri).body(()).unwrap();
+
+        let uncheck_code_res = UnCheckedCodeResponse::from_url(http_req);
+
+        assert!(uncheck_code_res.is_ok());
+
+        assert_eq!(uncheck_code_res.clone().unwrap().state.0, "mystate");
+        assert_eq!(uncheck_code_res.unwrap().code.0, "mycode");
+    }
+
+    #[test]
+    fn test_construct_uncheck_code_res_none_params() {
+        let uri = format!("https://www.example.com/");
+        let http_req = http::Request::builder().uri(uri).body(()).unwrap();
+
+        let uncheck_code_res = UnCheckedCodeResponse::from_url(http_req);
+
+        assert!(uncheck_code_res.is_err());
     }
 }

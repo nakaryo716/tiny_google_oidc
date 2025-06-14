@@ -25,7 +25,7 @@ use axum::{
     routing::{get, post},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use http::{StatusCode, header::HOST};
+use http::StatusCode;
 use serde::Deserialize;
 use tiny_google_oidc::{
     code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
@@ -126,24 +126,8 @@ async fn call_back(
     jar: CookieJar,
     req: Request,
 ) -> Result<impl IntoResponse, StatusCode> {
-    // UnCheckCodeResponse::from_url method is needed full url
-    // https://localhost/...
-    // So, Get HOST from Header and path
-    let host = req
-        .headers()
-        .get(HOST)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("localhost");
-    let path = req
-        .uri()
-        .path_and_query()
-        .map(|pq| pq.as_str())
-        .unwrap_or("/");
-    let scheme = "http";
-    let full_url = format!("{}://{}{}", scheme, host, path);
-
     // Construct UnCheckedCodeResponse
-    let code_res = UnCheckedCodeResponse::from_url(&full_url.as_str()).map_err(|e| {
+    let code_res = UnCheckedCodeResponse::from_url(req).map_err(|e| {
         error!("Failed to parse url: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;

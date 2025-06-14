@@ -21,4 +21,6 @@ pub enum Error {
     Send,
     #[error("Send request but failed")]
     SendStatus(StatusCode),
+    #[error("Parameters not found")]
+    ParamsNotFound,
 }
