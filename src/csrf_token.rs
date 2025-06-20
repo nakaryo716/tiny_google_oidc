@@ -45,7 +45,7 @@ impl CSRFToken {
 ///
 /// This token **has not been verified yet** and should be checked against the stored `CSRFToken` before proceeding.
 #[derive(Debug, Clone)]
-pub struct UnCheckedCSRFToken(pub(crate) String);
+pub struct RawCSRFToken(pub(crate) String);
 
 #[cfg(test)]
 mod tests {

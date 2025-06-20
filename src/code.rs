@@ -59,7 +59,7 @@ use url::Url;
 
 use crate::{
     config::{AuthEndPoint, ClientID, Config, RedirectURI},
-    csrf_token::{CSRFToken, UnCheckedCSRFToken},
+    csrf_token::{CSRFToken, RawCSRFToken},
     error::Error,
     nonce::Nonce,
 };
@@ -215,7 +215,7 @@ impl<'a> CodeRequest<'a> {
 /// ```
 #[derive(Debug, Clone)]
 pub struct UnCheckedCodeResponse {
-    state: UnCheckedCSRFToken,
+    state: RawCSRFToken,
     code: Code,
 }
 
@@ -227,7 +227,7 @@ impl UnCheckedCodeResponse {
         let query_str = query_src.extract_query().ok_or(Error::ParamsNotFound)?;
         let params: HashMap<_, _> = url::form_urlencoded::parse(query_str.as_bytes()).collect();
         Ok(Self {
-            state: UnCheckedCSRFToken(
+            state: RawCSRFToken(
                 params
                     .get("state")
                     .ok_or(Error::ParamsNotFound)?
