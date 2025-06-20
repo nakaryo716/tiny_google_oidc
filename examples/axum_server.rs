@@ -28,7 +28,7 @@ use axum_extra::extract::{CookieJar, cookie::Cookie};
 use http::StatusCode;
 use serde::Deserialize;
 use tiny_google_oidc::{
-    code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
+    code::{AccessType, AdditionalScope, CodeRequest, RawCodeResponse},
     config::{Config, ConfigBuilder},
     csrf_token::CSRFToken,
     id_token::{IDToken, IDTokenRequest, send_id_token_req},
@@ -127,7 +127,7 @@ async fn call_back(
     req: Request,
 ) -> Result<impl IntoResponse, StatusCode> {
     // Construct UnCheckedCodeResponse
-    let code_res = UnCheckedCodeResponse::from_url(req).map_err(|e| {
+    let code_res = RawCodeResponse::new(req).map_err(|e| {
         error!("Failed to parse url: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
