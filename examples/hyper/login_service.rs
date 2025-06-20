@@ -10,7 +10,7 @@ use http_body_util::{BodyExt, Empty, combinators::BoxBody};
 use hyper::body::Incoming;
 use redis::{aio::ConnectionManager, cmd};
 use tiny_google_oidc::{
-    code::{AccessType, AdditionalScope, CodeRequest, UnCheckedCodeResponse},
+    code::{AccessType, AdditionalScope, CodeRequest, RawCodeResponse},
     config::Config,
     csrf_token::CSRFToken,
     id_token::{IDToken, IDTokenRequest, send_id_token_req},
@@ -98,7 +98,7 @@ impl LoginService {
             .await?;
 
         // Create UncheckedCodeResponse from url
-        let code_res = UnCheckedCodeResponse::from_url(&req)?;
+        let code_res = RawCodeResponse::new(&req)?;
         // Consume the response and get the code
         // Verify that the CSRFToken matches (Error if they do not match)
         let code = code_res.exchange_with_code(&csrf_token)?;
