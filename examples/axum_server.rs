@@ -161,9 +161,9 @@ async fn call_back(
     let refresh_token = res.access_token();
     println!("{:?}", refresh_token);
     // Get IDToken that Base64URL encoded
-    let id_token_row = res.id_token();
+    let id_token_raw = res.id_token();
     // Decode and Get IDToken that deserialized
-    let id_token = IDToken::from_id_token_row(id_token_row).unwrap();
+    let id_token = IDToken::from_id_token_raw(id_token_raw).unwrap();
     Ok((StatusCode::OK, Json(id_token)))
 }
 
