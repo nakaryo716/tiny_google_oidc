@@ -228,7 +228,7 @@ mod tests {
         code::Code,
         config::ConfigBuilder,
         error::Error,
-        id_token::{AccessToken, IDToken, IDTokenRequest, IDTokenResponse, IDTokenRow},
+        id_token::{AccessToken, IDToken, IDTokenRaw, IDTokenRequest, IDTokenResponse},
         refresh_token::RefreshToken,
     };
 
@@ -258,29 +258,29 @@ mod tests {
         }"#;
         let encoded = BASE64_URL_SAFE_NO_PAD.encode(id_token_json);
 
-        let mut token_row = "header.".to_string();
-        token_row.push_str(&encoded);
-        token_row.push_str(".signature");
-        let id_token_row = IDTokenRow(token_row);
+        let mut token_raw = "header.".to_string();
+        token_raw.push_str(&encoded);
+        token_raw.push_str(".signature");
+        let id_token_raw = IDTokenRaw(token_raw);
 
-        let decoded = IDToken::from_id_token_row(&id_token_row);
+        let decoded = IDToken::from_id_token_raw(&id_token_raw);
         assert!(decoded.is_ok());
     }
 
     #[test]
     fn test_id_token_decode_invalid_base64() {
-        let id_token_row = IDTokenRow("invalid_base64".to_string());
+        let id_token_raw = IDTokenRaw("invalid_base64".to_string());
 
-        let decoded = IDToken::from_id_token_row(&id_token_row);
+        let decoded = IDToken::from_id_token_raw(&id_token_raw);
         assert!(matches!(decoded, Err(Error::Decode)));
     }
 
     #[test]
     fn test_id_token_decode_invalid_json() {
         let invalid_json = BASE64_URL_SAFE_NO_PAD.encode("not a valid json");
-        let id_token_row = IDTokenRow(invalid_json);
+        let id_token_raw = IDTokenRaw(invalid_json);
 
-        let decoded = IDToken::from_id_token_row(&id_token_row);
+        let decoded = IDToken::from_id_token_raw(&id_token_raw);
         assert!(matches!(decoded, Err(Error::Decode)));
     }
 
@@ -306,13 +306,13 @@ mod tests {
     #[test]
     fn test_id_token_response_getters() {
         let access_token = AccessToken("access_token_value".to_string());
-        let id_token_row = IDTokenRow("id_token_value".to_string());
+        let id_token_raw = IDTokenRaw("id_token_value".to_string());
         let refresh_token = Some(RefreshToken("refresh_token_value".to_string()));
 
         let response = IDTokenResponse {
             access_token: access_token.clone(),
             expires_in: 3600,
-            id_token: id_token_row.clone(),
+            id_token: id_token_raw.clone(),
             scope: "openid email".to_string(),
             token_type: "Bearer".to_string(),
             refresh_token: refresh_token.clone(),
@@ -320,7 +320,7 @@ mod tests {
 
         assert_eq!(response.access_token(), &access_token);
         assert_eq!(response.expires_in(), 3600);
-        assert_eq!(response.id_token(), &id_token_row);
+        assert_eq!(response.id_token(), &id_token_raw);
         assert_eq!(response.scope(), "openid email");
         assert_eq!(response.token_type(), "Bearer");
         assert_eq!(response.refresh_token(), &refresh_token);
