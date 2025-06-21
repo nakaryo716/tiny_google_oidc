@@ -5,7 +5,7 @@
 //! IDTokenResponse: A data structure for parsing the response from the token endpoint.
 //! IDToken: A data structure representing the decoded payload of an ID token.
 //! AccessToken: A structure representing an access token used to call Google APIs.
-//! IDTokenRow: A structure representing an encoded ID token before decoding.
+//! IDTokenRaw: A structure representing an encoded ID token before decoding.
 
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use serde::{Deserialize, Serialize};
@@ -53,9 +53,9 @@ pub struct IDToken {
 }
 
 impl IDToken {
-    /// Construct IDToken from [`IDTokenRow`] .   
-    /// Decodes an IDTokenRow (encoded ID token) into an IDToken.
-    pub fn from_id_token_row(id_token: &IDTokenRow) -> Result<Self, Error> {
+    /// Construct IDToken from [`IDTokenRaw`] .   
+    /// Decodes an IDTokenRaw (encoded ID token) into an IDToken.
+    pub fn from_id_token_raw(id_token: &IDTokenRaw) -> Result<Self, Error> {
         let split: Vec<_> = id_token.0.split(".").collect();
         if split.len() != 3 {
             return Err(Error::Decode);
@@ -129,7 +129,7 @@ impl<'a> IDTokenRequest<'a> {
 pub struct IDTokenResponse {
     access_token: AccessToken,
     expires_in: u32,
-    id_token: IDTokenRow,
+    id_token: IDTokenRaw,
     scope: String,
     token_type: String,
     refresh_token: Option<RefreshToken>,
@@ -144,7 +144,7 @@ impl IDTokenResponse {
         self.expires_in
     }
 
-    pub fn id_token(&self) -> &IDTokenRow {
+    pub fn id_token(&self) -> &IDTokenRaw {
         &self.id_token
     }
 
@@ -175,7 +175,7 @@ impl AccessToken {
 
 /// Represents an encoded ID token, which must be decoded before use.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct IDTokenRow(String);
+pub struct IDTokenRaw(String);
 
 /// A function that sends an HTTP request to Google's authentication server to obtain an IDToken.  
 ///
