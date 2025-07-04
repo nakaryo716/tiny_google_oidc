@@ -47,3 +47,7 @@ path = "examples/axum_server.rs"
 [[example]]
 name = "hyper"
 path = "examples/hyper/main.rs"
+
+[[example]]
+name = "id_token"
+path = "examples/id_token.rs"
