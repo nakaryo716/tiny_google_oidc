@@ -51,3 +51,7 @@ path = "examples/hyper/main.rs"
 [[example]]
 name = "id_token"
 path = "examples/id_token.rs"
+
+[[example]]
+name = "easy_id_token"
+path = "examples/easy/id_token.rs"
