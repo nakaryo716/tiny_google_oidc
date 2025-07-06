@@ -24,8 +24,11 @@
 pub mod code;
 pub mod config;
 pub mod csrf_token;
+pub mod easy;
 pub mod error;
 pub mod id_token;
 pub mod nonce;
 pub mod refresh_token;
 pub mod revoke_token;
+
+pub use easy::{create_id_token_request, generate_auth_redirect};
