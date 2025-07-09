@@ -33,7 +33,7 @@ let oidc_cfg = ConfigBuilder::new()
     .redirect_uri("http://localhost/auth/callback")
     .build();
 ```
-## 2. Login Handler
+### 2. Login Handler
 Here's an example handler to start the login flow.
 ```rust
 async fn login(
