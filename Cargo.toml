@@ -42,15 +42,15 @@ futures-util = "0.3"
 
 [[example]]
 name = "axum_server"
-path = "examples/axum_server.rs"
+path = "examples/core/axum_server.rs"
 
 [[example]]
 name = "hyper"
-path = "examples/hyper/main.rs"
+path = "examples/core/hyper/main.rs"
 
 [[example]]
-name = "id_token"
-path = "examples/id_token.rs"
+name = "core_id_token"
+path = "examples/core/id_token.rs"
 
 [[example]]
 name = "easy_id_token"
