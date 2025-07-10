@@ -6,7 +6,7 @@
 //! 3. Set step 2's value as a static value down below
 //! 4. Run with the following
 //! ```not_rust
-//! cargo run --example id_token
+//! cargo run --example core_id_token
 //! ```
 use std::{
     collections::HashMap,
