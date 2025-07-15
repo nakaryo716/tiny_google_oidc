@@ -137,8 +137,8 @@ pub async fn send_refresh_token_req(
     }
 
     let res_json = res.json::<RefreshTokenResponse>().await.map_err(|e| {
-        error!("Failed to parse JSON: {:?}", e);
-        Error::Json
+        error!("Failed to deserialize JSON: {:?}", e);
+        Error::DeserializeJson
     })?;
     Ok(res_json)
 }
