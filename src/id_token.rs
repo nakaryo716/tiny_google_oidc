@@ -214,8 +214,8 @@ pub async fn send_id_token_req(req: &IDTokenRequest<'_>) -> Result<IDTokenRespon
     }
 
     let res_json = res.json::<IDTokenResponse>().await.map_err(|e| {
-        error!("Failed to parse JSON: {:?}", e);
-        Error::Json
+        error!("Failed to deserialize JSON: {:?}", e);
+        Error::DeserializeJson
     })?;
     Ok(res_json)
 }
