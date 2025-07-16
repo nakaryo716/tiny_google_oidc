@@ -196,7 +196,7 @@ impl<'a> CodeRequest<'a> {
             self.state.0,
             self.nonce.0,
         );
-        let url = Url::parse(&url).map_err(|_| Error::URL)?;
+        let url = Url::parse(&url).map_err(|_| Error::ParseURL)?;
         Ok(url)
     }
 }

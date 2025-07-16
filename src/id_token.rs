@@ -188,7 +188,7 @@ pub async fn send_id_token_req(req: &IDTokenRequest<'_>) -> Result<IDTokenRespon
 
     let url = Url::parse(req.token_endpoint().value()).map_err(|e| {
         error!("Failed to parse url: {:?}", e);
-        Error::URL
+        Error::ParseURL
     })?;
     let mut params = HashMap::new();
     params.insert("code", req.code().0.as_str());
