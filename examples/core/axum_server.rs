@@ -34,7 +34,6 @@ use tiny_google_oidc::{
     id_token::{IDToken, IDTokenRequest, send_id_token_req},
     nonce::Nonce,
     refresh_token::{RefreshToken, RefreshTokenRequest, send_refresh_token_req},
-    revoke_token::{RevokeToken, RevokeTokenRequest, send_revoke_token_req},
 };
 use tracing::error;
 use uuid::Uuid;
@@ -72,7 +71,6 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/auth/callback", get(call_back))
         .route("/", get(start_auth))
-        .route("/revoke", post(revoke_token))
         .route("/refresh", post(refresh_token))
         .with_state(Arc::new(app_state));
 
@@ -165,15 +163,6 @@ async fn call_back(
     // Decode and Get IDToken that deserialized
     let id_token = IDToken::from_id_token_raw(id_token_raw).unwrap();
     Ok((StatusCode::OK, Json(id_token)))
-}
-
-async fn revoke_token(Json(refresh_token): Json<Token>) -> Result<impl IntoResponse, StatusCode> {
-    let token = RevokeToken::new_access_token(&refresh_token.token);
-    let req = RevokeTokenRequest::new(&token);
-    send_revoke_token_req(&req)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(StatusCode::OK)
 }
 
 // Refresh token handler
