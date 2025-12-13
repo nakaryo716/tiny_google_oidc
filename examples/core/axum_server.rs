@@ -22,18 +22,16 @@ use axum::{
     Json, Router,
     extract::{Request, State},
     response::{IntoResponse, Redirect},
-    routing::{get, post},
+    routing::get,
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
 use http::StatusCode;
-use serde::Deserialize;
 use tiny_google_oidc::{
     code::{AccessType, AdditionalScope, CodeRequest, RawCodeResponse},
     config::{Config, ConfigBuilder},
     csrf_token::CSRFToken,
     id_token::{IDToken, IDTokenRequest, send_id_token_req},
     nonce::Nonce,
-    refresh_token::{RefreshToken, RefreshTokenRequest, send_refresh_token_req},
 };
 use tracing::error;
 use uuid::Uuid;
@@ -71,7 +69,6 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/auth/callback", get(call_back))
         .route("/", get(start_auth))
-        .route("/refresh", post(refresh_token))
         .with_state(Arc::new(app_state));
 
     axum::serve(listener, app).await.unwrap();
@@ -165,22 +162,6 @@ async fn call_back(
     Ok((StatusCode::OK, Json(id_token)))
 }
 
-// Refresh token handler
-async fn refresh_token(
-    State(app_state): State<Arc<AppState>>,
-    Json(refresh_token): Json<Token>,
-) -> Result<impl IntoResponse, StatusCode> {
-    // get refresh_token from json
-    // this is test
-    // Recommend get refresh_token from secure database in production code
-    let refresh_token = RefreshToken::new(&refresh_token.token);
-    let req = RefreshTokenRequest::new(&app_state.config, &refresh_token);
-    let res = send_refresh_token_req(&req)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok((StatusCode::OK, Json(res)))
-}
-
 // Get env from .env file
 fn read_env(key: &str) -> anyhow::Result<String> {
     dotenvy::var(key).context("Failed to read env")
@@ -199,9 +180,4 @@ impl AppState {
             token: Arc::default(),
         }
     }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct Token {
-    token: String,
 }
