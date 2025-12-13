@@ -47,7 +47,9 @@ use crate::{
 /// Returns an error if token generation or URI construction fails.  
 ///
 /// # Examples
-/// ```no_run
+/// ```rust
+/// # use tiny_google_oidc::{config::ConfigBuilder, code::{AdditionalScope, AccessType}, easy::generate_auth_redirect};
+/// # let config = ConfigBuilder::new().build();
 /// let (csrf_token, nonce, uri) = generate_auth_redirect(
 ///     &config,
 ///     AccessType::Offline,
@@ -88,15 +90,17 @@ pub fn generate_auth_redirect(
 /// Returns an error if CSRF validation fails or if the query cannot be parsed.  
 ///
 /// # Examples
-/// ```no_run
-/// fn callback_handler(config: &Config, stored_csrf_token: &str, req: Request) -> Result<(), Error> {
+/// ```rust
+/// # use tiny_google_oidc::{easy::create_id_token_request, config::Config};
+/// # fn callback_handler<T>(config: &Config, stored_csrf_token: &str, req: http::Request<T>) -> Result<(), Box<dyn std::error::Error>> {
 ///     // http::Request is implemented QueryExtractor trait
 ///     let id_token_req = create_id_token_request(
 ///         config,
 ///         stored_csrf_token,
 ///         req
 ///     )?;
-/// }
+/// #     Ok(())
+/// # }
 /// ```
 pub fn create_id_token_request<'a, Q: QueryExtractor>(
     config: &'a Config,

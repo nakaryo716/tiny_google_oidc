@@ -9,7 +9,7 @@
 //!
 //! # Example
 //! ```rust
-//! use tny_google_oidc::config::Config;
+//! # use tiny_google_oidc::config::Config;
 //!
 //! let config = Config::builder()
 //!     .auth_endpoint("https://accounts.google.com/o/oauth2/auth")
@@ -172,7 +172,7 @@ impl ConfigBuilder {
 /// use tiny_google_oidc::config::AuthEndPoint;
 /// let endpoint_str = "https://accounts.google.com/o/oauth2/auth";
 /// let auth_endpoint: AuthEndPoint = endpoint_str.into();
-/// assert_eq!(auth_endpoint, AuthEndPoint(endpoint_str.to_string()))
+/// assert_eq!(auth_endpoint.value(), endpoint_str)
 /// ```
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct AuthEndPoint(pub(crate) String);
@@ -215,7 +215,7 @@ impl From<String> for AuthEndPoint {
 ///
 /// let client_id_str = "your-client-id";
 /// let client_id: ClientID = client_id_str.into();
-/// assert_eq!(client_id, ClientID(client_id_str.to_string()));
+/// assert_eq!(client_id.value(), client_id_str);
 /// ```
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ClientID(pub(crate) String);
@@ -258,7 +258,7 @@ impl From<String> for ClientID {
 ///
 /// let secret_str = "your-client-secret";
 /// let client_secret: ClientSecret = secret_str.into();
-/// assert_eq!(client_secret, ClientSecret(secret_str.to_string()));
+/// assert_eq!(client_secret.value(), secret_str);
 /// ```
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ClientSecret(pub(crate) String);
@@ -300,7 +300,7 @@ impl From<String> for ClientSecret {
 ///
 /// let token_endpoint_str = "https://oauth2.googleapis.com/token";
 /// let token_endpoint: TokenEndPoint = token_endpoint_str.into();
-/// assert_eq!(token_endpoint, TokenEndPoint(token_endpoint_str.to_string()));
+/// assert_eq!(token_endpoint.value(), token_endpoint_str);
 /// ```
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TokenEndPoint(pub(crate) String);
@@ -343,7 +343,7 @@ impl From<String> for TokenEndPoint {
 ///
 /// let redirect_uri_str = "https://your-app.com/callback";
 /// let redirect_uri: RedirectURI = redirect_uri_str.into();
-/// assert_eq!(redirect_uri, RedirectURI(redirect_uri_str.to_string()));
+/// assert_eq!(redirect_uri.value(), redirect_uri_str);
 /// ```
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct RedirectURI(pub(crate) String);
