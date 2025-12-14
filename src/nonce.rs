@@ -6,30 +6,28 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Nonce(pub(crate) String);
 
-/// # **Overview**
+/// # Overview
 /// A `Nonce` is a **unique, random value** used to prevent replay attacks in OpenID Connect authentication.  
 /// It ensures that the authentication request and response belong to the same session.
 ///
 /// This structure automatically generates a new random nonce using `UUIDv4` when created.
 ///
-/// # **Usage**
-///
+/// # Usage
 /// - The nonce is included in the authentication request (`CodeRequest`).
 /// - When receiving an ID token from Google, the `Nonce` in the token should be verified
 ///   against the original nonce sent in the request.
 ///
-/// # **Implementation Details**
-///
+/// # Implementation Details
 /// - The `Nonce` value is a **UUIDv4 string**.
 /// - It implements `Serialize` and `Deserialize` for easy integration with JSON-based flows.
 ///
-/// # **Example**
+/// # Example
 ///
 /// ```rust,no_run
-/// use crate::nonce::Nonce;
+/// use tiny_google_oidc::nonce::Nonce;
 ///
 /// let nonce = Nonce::new();
-/// println!("Generated Nonce: {}", nonce.0);
+/// println!("Generated Nonce: {:?}", nonce);
 /// ```
 /// - Always **verify the nonce** in the received ID token against the originally generated value
 ///   to ensure security.

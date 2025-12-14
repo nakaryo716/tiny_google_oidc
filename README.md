@@ -5,7 +5,9 @@
 ![GitHub License](https://img.shields.io/github/license/nakaryo716/tiny_google_oidc)
 
 Tiny library for Google's OpenID Connect.  
-Implementation in server flow  
+This library provides essential tools for handling Google's OpenID Connect flow, including
+generating authentication URLs, verifying tokens.  
+Implementation in server flow.
 [google document](https://developers.google.com/identity/openid-connect/openid-connect)
 ## Feature
 - Generate a CSRF Token
@@ -13,13 +15,6 @@ Implementation in server flow
 - Verify CSRF token and retrieve id_token
 - Exchange code for id_token (using reqwest)
 - Decode id_token (Base64URLDecode) to get user information
-- Refresh access token using refresh token (using reqwest)
-- Revoke access/refresh token (using reqwest)
-## Caution
-This library is designed for direct communication with Google over HTTPS.  
-It does not validate the id_token when converting it to a JWT,  
-so the id_token cannot be passed to other components of your app.
-[See document](https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo)
 ## Example
 Here's hou you can use this library with the axum framework.
 ### 1. Create Config
