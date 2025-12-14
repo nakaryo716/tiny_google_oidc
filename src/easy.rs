@@ -48,13 +48,15 @@ use crate::{
 ///
 /// # Examples
 /// ```rust
-/// # use tiny_google_oidc::{config::ConfigBuilder, code::{AdditionalScope, AccessType}, easy::generate_auth_redirect};
-/// # let config = ConfigBuilder::new().build();
-/// let (csrf_token, nonce, uri) = generate_auth_redirect(
-///     &config,
-///     AccessType::Offline,
-///     AdditionalScope::Both
-/// )?;
+/// # use tiny_google_oidc::{config::Config, code::{AdditionalScope, AccessType}, easy::generate_auth_redirect};
+/// # fn doc(config: Config) -> Result<(), Box<dyn std::error::Error>> {
+///       let (csrf_token, nonce, uri) = generate_auth_redirect(
+///           &config,
+///           AccessType::Offline,
+///           AdditionalScope::Both
+///       )?;
+///       Ok(())
+/// # }
 /// ```
 pub fn generate_auth_redirect(
     config: &Config,

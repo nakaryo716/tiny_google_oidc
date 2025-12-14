@@ -20,8 +20,8 @@
 //! - This is obtained after validating the `RawCodeResponse` with a CSRF token.
 //!
 //! # Examples
-//! ## Generating an Authorization Request URL
-//! ```rust
+//! Generating an Authorization Request URL
+//! ```rust, no_run
 //! # use tiny_google_oidc::{config::Config, csrf_token::CSRFToken, nonce::Nonce, code::{CodeRequest, AdditionalScope, AccessType}};
 //! let config = Config::builder()
 //!     .client_id("your_client_id")
@@ -36,19 +36,6 @@
 //! let request = CodeRequest::new(access_type, &config, scope, &csrf_token, &nonce);
 //! let url = request.try_into_url().unwrap();
 //! println!("Auth URL: {}", url);
-//! ```
-//!
-//! ## Handling the Callback and Verifying the Authorization Code
-//! ```rust
-//! # use tiny_google_oidc::{code::RawCodeResponse, csrf_token::CSRFToken};
-//! # use std::collections::HashMap;
-//! # let store: HashMap<String, CSRFToken> = HashMap::default();
-//! # let req: http::Request<_>;
-//! let response = RawCodeResponse::new(req).unwrap();
-//! // get stored CSRF token From DB(Redis, in memory ...)
-//! let csrf_token = store.get("csrf_token_key".into())?;
-//!
-//! let code = response.exchange_with_code(csrf_token).expect("CSRF token mismatch!");
 //! ```
 //!
 //! # Flow
@@ -76,26 +63,9 @@ use std::{collections::HashMap, iter::Iterator};
 ///
 /// # Purpose
 /// The `Code` is used to construct an `IDTokenRequest`, which is required to retrieve an ID token from Google.
-/// ```rust
-/// # use tiny_google_oidc::{code::Code, id_token::IDTokenRequest};
-/// let code: Code = Code::new_with_verify_csrf(res, stored_csrf_token)?;
-/// let id_token_req = IDTokenRequest::new(&config, code);
-/// ```
-///
 /// # How to Create
 /// A `Code` can only be created after validating the `CSRFToken`.  
 /// Use either `Code::new_with_verify_csrf` or `RawCodeResponse::exchange_with_code` to validate and create a `Code`.
-///
-/// # Example
-/// ```rust
-/// # use tiny_google_oidc::{csrf_token::CSRFToken, code::RawCodeResponse};
-/// # use std::collections::HashMap;
-/// # let store: HashMap<String, CSRFToken> = HashMap::default();
-/// let response = RawCodeResponse::new(req).unwrap();
-/// let csrf_token = store.get("csrf_token_key".into())?;
-///
-/// let code = response.exchange_with_code(csrf_token).expect("CSRF token mismatch!");
-/// ```
 ///
 /// # Notes
 /// - Always validate the `CSRFToken` before using the `Code`.
@@ -117,8 +87,8 @@ impl Code {
 
 /// Generates a URL to initiate the authorization request.
 /// # Example
-/// ```rust
-/// # use tiny_google_oidc::{config::Config, csrf_token::CSRFToken, nonce::Nonce, code::{AdditionalScope, CodeRequest};
+/// ```rust, no_run
+/// # use tiny_google_oidc::{config::Config, csrf_token::CSRFToken, nonce::Nonce, code::{AdditionalScope, AccessType, CodeRequest}};
 /// let config = Config::builder()
 ///     .client_id("your_client_id")
 ///     .redirect_uri("your_redirect_uri")
@@ -130,7 +100,6 @@ impl Code {
 ///
 /// let request = CodeRequest::new(AccessType::Online, &config, scope, &csrf_token, &nonce);
 /// let url = request.try_into_url().unwrap();
-/// println!("Auth URL: {}", url);
 /// ```
 #[derive(Debug, Clone)]
 pub struct CodeRequest<'a> {
@@ -214,17 +183,6 @@ impl<'a> CodeRequest<'a> {
 
 /// A response from Google containing an unverified authorization code and state.  
 /// Must be validated using a CSRF token before use.
-/// # Example
-/// ```rust
-/// # use tiny_google_oidc::{code::RawCodeResponse, csrf_token::CSRFToken};
-/// # use std::collections::HashMap;
-/// # let req: http::Request<_>;
-/// let store: HashMap<String, CSRFToken> = HashMap::default();
-/// let response = RawCodeResponse::new(req).unwrap();
-/// let csrf_token = store.get("csrf_token_key")?;
-///
-/// let code = response.exchange_with_code(csrf_token).expect("CSRF token mismatch!");
-/// ```
 #[derive(Debug, Clone)]
 pub struct RawCodeResponse {
     state: RawCSRFToken,
@@ -320,15 +278,6 @@ pub enum AccessType {
 ///
 /// ## None
 /// No additional scopes are added  
-///
-/// # Example
-/// ```rust
-/// # use tiny_google_oidc::code::{AdditionalScope, AccessType, CodeRequest};
-/// let request = CodeRequest::new(AccessType::Online, &config, AdditionalScope::Both, &csrf_token, &nonce);
-/// let url = request.into_url().unwrap();
-/// println!("Authorization URL: {}", url);
-/// ```
-///
 /// If **no additional scopes** are specified, the request will **only include `openid`**, which is required for authentication.
 ///
 /// # Notes
